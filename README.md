@@ -1,31 +1,111 @@
 # omacheckstatus
 
-An [Omarchy](https://omarchy.org/) shell plugin that watches
-[status.claude.com](https://status.claude.com) from the status bar.
+An [Omarchy](https://omarchy.org/) shell plugin that watches service status
+pages from the status bar.
 
-- Polls the Statuspage feed behind status.claude.com every 5 minutes.
-- Fires one desktop notification whenever the status changes — a new incident,
-  a new update on an ongoing one, a component degrading or recovering, or a
-  return to normal. The toast times out on its own (15s for an outage, 6s for
-  a recovery) and carries no click action, so a click just dismisses it.
-- Left-click the bar icon for a popup with the **latest ongoing incident**:
-  its title, lifecycle status, impact, how long it has been running, and the
-  body of the most recent update. When nothing is wrong it says so.
+- Watches up to **10 status pages** on one timer, in one batched request.
+- The bar icon carries the **worst** status across everything you watch: a
+  check when all is well, a warning glyph in the theme's urgent color when it
+  isn't.
+- Fires one desktop notification **per service** whenever that service's status
+  changes — a new incident, a new update on an ongoing one, a component
+  degrading or recovering, or a return to normal.
+- Click the icon for a popup with **one compact line per service**. Click a
+  line to unfold its ongoing incident. When nothing is wrong it says so.
+- A built-in **settings view** (the gear) manages the service list and the
+  check interval. Everything is written to `shell.json` as you change it, so
+  the list survives restarts.
 
-The icon is a check when Claude is operational and a warning glyph in the
-theme's urgent color when it is not.
+## What can be watched
+
+Anything that publishes an [Atlassian
+Statuspage](https://www.atlassian.com/software/statuspage) feed — that is, a
+page with a working `/api/v2/summary.json`. A great many services do, which is
+why one widget can watch them all from one contract.
+
+**Google (including YouTube and Gmail), X/Twitter, Slack, AWS, Azure, Notion,
+Linear and Heroku cannot be watched here.** They each run their own status
+format. A pasted URL is checked before it is added, so one of those fails with
+an explanation instead of becoming a row that can only ever say "unreachable".
+
+The preset list below was verified against the live endpoint. Pick from it, or
+paste any other Statuspage URL.
+
+| | | | |
+|---|---|---|---|
+| Claude | Cloudflare | Dropbox | Sentry |
+| OpenAI | Vercel | Airtable | Discord |
+| GitHub | Netlify | Zapier | Zoom |
+| Bitbucket | DigitalOcean | 1Password | Reddit |
+| npm | Supabase | Proton | Stripe |
+| Docker | MongoDB | Tailscale | Shopify |
+| CircleCI | Elastic | Atlassian | Squarespace |
+| Snowflake | HashiCorp | Jira | Twilio |
+| Cloudinary | Datadog | Figma | Plaid |
+| Coinbase | Epic Games | Wikipedia | |
+
+## The popup
+
+One line per service — glyph, name, and a uniform status word. Providers each
+write their own prose ("Partially Degraded Service", "Minor Service Outage"),
+and ten phrasings stacked in one popup is noise, so the row states the status
+in one consistent set of words: *Operational, Maintenance, Minor issue, Major
+outage, Critical outage, Unreachable*.
+
+A service with an open incident also shows its title on one elided line.
+Clicking the row unfolds the provider's own description, the incident's status,
+impact and age, the latest update (trimmed — the status page has the rest), and
+the affected components. Only one row is unfolded at a time, so the popup stays
+scannable whether you watch one service or ten. With a single service watched,
+its detail is unfolded on open.
 
 ## Interactions
 
 | Input | Effect |
 |---|---|
-| left click | toggle the popup |
-| right click | check now |
-| middle click | open status.claude.com |
-| `r` (popup) | check now |
-| `o` (popup) | open status.claude.com |
-| `j`/`k`, arrows, `Enter` | move and activate the popup cursor |
-| `Esc` | close |
+| left click the icon | toggle the popup |
+| right click the icon | check now |
+| middle click the icon | open settings |
+| click a row | unfold / fold its detail |
+| middle click a row | open that service's status page |
+| `j` / `k`, arrows | move the row cursor |
+| `Enter` / `Space` | unfold the row under the cursor |
+| `o` | open the cursored service's status page |
+| `r` | check now |
+| `s` | toggle the settings view |
+| `Esc` | leave settings, or close the popup |
+
+The settings view is mouse-driven: its dropdowns, text field and toggles own
+the keyboard while they are active, so typing a URL does not drive the panel.
+
+## Notifications
+
+The toast announces; the bar icon is the state. So the toast always expires on
+its own (15s for an outage, 6s for a recovery) and the icon stays lit until the
+service actually recovers — you never have to clear anything to get back to a
+truthful bar.
+
+Dismissing early, all built into Omarchy:
+
+| Input | Effect |
+|---|---|
+| left or right click the toast | dismiss it |
+| `Super` + `,` | dismiss the last notification |
+| `Super` + `Shift` + `,` | dismiss all notifications |
+| `Super` + `Shift` + `Alt` + `,` | notification history |
+
+The toast deliberately has no click action. Omarchy runs a toast's action and
+*then* dismisses it, so attaching one would turn an ordinary click-to-dismiss
+into "open a browser tab". To read more, click the bar icon.
+
+Urgency is capped at `normal` for the same reason: Omarchy gives a `critical`
+toast a duration of `0`, meaning it never leaves the screen until dismissed by
+hand. An outage doesn't warrant that when the bar icon already carries the
+signal.
+
+The first successful check of a service is its silent baseline, so adding a
+service that is *already* broken does not fire a "status changed" toast. Only
+subsequent changes notify.
 
 ## Install
 
@@ -42,62 +122,60 @@ Or, once it is pushed somewhere:
 omarchy plugin add <repo-url> --enable --yes
 ```
 
-## Notifications
-
-The toast announces; the bar icon is the state. So the toast always expires on
-its own and the icon stays lit until the service actually recovers — you never
-have to clear anything to get back to a truthful bar.
-
-Dismissing early, all built into Omarchy:
-
-| Input | Effect |
-|---|---|
-| left or right click the toast | dismiss it |
-| `Super` + `,` | dismiss the last notification |
-| `Super` + `Shift` + `,` | dismiss all notifications |
-| `Super` + `Shift` + `Alt` + `,` | notification history |
-
-The toast deliberately has no click action. Omarchy runs a toast's action and
-*then* dismisses it, so attaching one would turn an ordinary click-to-dismiss
-into "open a browser tab". To read more, click the bar icon — or middle-click
-it to go straight to status.claude.com.
-
-Urgency is capped at `normal` for the same reason: Omarchy gives a `critical`
-toast a duration of `0`, meaning it never leaves the screen until dismissed by
-hand. An outage doesn't warrant that when the bar icon is already carrying the
-signal.
-
-Set `"notify": false` on the widget's entry to turn the toasts off entirely
-and rely on the icon alone.
-
 ## Settings
 
-Set these inline on the widget's entry in `~/.config/omarchy/shell.json`:
+Managed in the popup's settings view, and stored inline on the widget's entry
+in `~/.config/omarchy/shell.json`:
 
 ```json
-{ "id": "omacheckstatus", "refreshIntervalSec": 300, "notify": true, "hideWhenOperational": false }
+{
+  "id": "omacheckstatus",
+  "refreshIntervalSec": 300,
+  "notify": true,
+  "hideWhenOperational": false,
+  "services": [
+    { "name": "Claude", "url": "https://status.claude.com" },
+    { "name": "GitHub", "url": "https://www.githubstatus.com" }
+  ]
+}
 ```
 
 | Key | Default | Meaning |
 |---|---|---|
-| `refreshIntervalSec` | `300` | Seconds between checks, clamped to 60–3600. |
-| `notify` | `true` | Send a notification when the status changes. |
+| `services` | Claude | Pages to watch, up to 10. Omit the key entirely to get the Claude default. |
+| `refreshIntervalSec` | `300` | Seconds between checks. The settings view offers 5m / 15m / 30m / 1h / 3h; a hand-edited value is clamped to 60–21600. |
+| `notify` | `true` | Send a notification when a service's status changes. |
 | `hideWhenOperational` | `false` | Keep the icon off the bar unless something is wrong. |
 
-## Layout
+Hand-editing is safe: the list is re-validated on load, so bad URLs are
+dropped, duplicates collapse and the list is capped at 10. A service's `name`
+is only a label — if you leave it out, the provider's own page name is adopted
+on the first successful check.
 
-| File | Role |
-|---|---|
-| `manifest.json` | plugin declaration and settings schema |
-| `Service.qml` | polling, change detection, notifications |
-| `Panel.qml` | bar button and popup |
-| `Model.js` | feed parsing, labels, glyphs, relative times |
+## Scripting
+
+The widget registers an IPC target, so a dotfiles bootstrap can set the list up
+without hand-editing `shell.json`:
+
+```bash
+omarchy-shell omacheckstatus state            # one line per service
+omarchy-shell omacheckstatus presets          # every preset name
+omarchy-shell omacheckstatus addPreset GitHub # add by preset name
+omarchy-shell omacheckstatus add status.figma.com  # add by URL (verified first)
+omarchy-shell omacheckstatus remove GitHub    # by name or URL fragment
+omarchy-shell omacheckstatus interval 900     # seconds
+omarchy-shell omacheckstatus refresh          # check now
+omarchy-shell omacheckstatus toggle           # open/close the popup
+omarchy-shell omacheckstatus openSettings     # open on the settings view
+omarchy-shell omacheckstatus expand Cloudflare # open with one detail unfolded
+```
+
+`expand` makes a useful keybind: "show me what's wrong with X".
 
 ## Developing
 
-The shell hot-reloads plugin code on save, but its file watcher does not
-follow symlinks — so with the symlink install above, an edit in `~/dev` needs
-a nudge:
+The shell hot-reloads plugin code on save, but its file watcher does not follow
+symlinks — so with the symlink install above, an edit in `~/dev` needs a nudge:
 
 ```bash
 omarchy restart shell
@@ -106,26 +184,40 @@ omarchy restart shell
 `omarchy-shell shell rescanPlugins` re-reads manifests but will not pick up
 changed QML through the symlink.
 
-The plugin registers an IPC target, which is handy while working on it:
+`Model.js` is plain JavaScript with no QML dependencies, so it can be unit
+tested directly:
 
 ```bash
-omarchy-shell omacheckstatus state     # current description
-omarchy-shell omacheckstatus refresh   # check now
-omarchy-shell omacheckstatus toggle    # open/close the popup
+node -e "const m=new Function(require('fs').readFileSync('Model.js','utf8')
+  +'; return {normalizePageUrl,normalizeServices};')();
+  console.log(m.normalizePageUrl('githubstatus.com'))"
 ```
 
-To exercise the notification and incident paths without waiting for a real
-outage, point `endpoint` in `Service.qml` at a `file://` path and edit that
-JSON between refreshes.
+## Layout
+
+| File | Role |
+|---|---|
+| `manifest.json` | plugin declaration and settings schema |
+| `Service.qml` | the batched poll, change detection, notifications, URL probing |
+| `Panel.qml` | bar button, status popup, settings view |
+| `Model.js` | presets, URL handling, feed parsing, labels, aggregation |
 
 ## Notes
 
-The first successful check after the shell starts establishes the baseline
-silently — logging in to an already-broken service should not produce a
-"status changed" toast. Only subsequent changes notify.
+**One request per tick, not one per service.** A single `curl` loop walks every
+endpoint and emits a delimited stream, so ten feeds cost one process instead of
+ten racing ones, and the whole readings set updates at once. URLs go in as
+`"$@"` argv, so a hand-edited config can never become a command.
 
-A failed check keeps the last good reading on screen and adds a line saying
-the latest check failed, rather than blanking out what is known.
+**A failed check keeps the last good reading** and marks the row, rather than
+blanking out what is known. One unreachable feed cannot spoil the others in the
+batch.
+
+**Arrays out of `shell.json` are not JS arrays.** They arrive as a list proxy
+that indexes and reports `length` correctly but fails `Array.isArray`, which
+silently read a perfectly good service list as empty. `Model.toArray` coerces
+anything array-shaped crossing that boundary — worth knowing before adding
+another list-valued setting.
 
 Requires `curl`, and `jq` (already an Omarchy dependency) for the notification
-sender's click action.
+sender.

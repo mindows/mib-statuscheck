@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "id": "omacheckstatus",
-  "name": "Claude status",
-  "version": "1.0.0",
+  "name": "Service status",
+  "version": "2.0.0",
   "author": "min",
   "license": "MIT",
-  "description": "Watches status.claude.com, notifies when the service status changes, and shows the ongoing incident in a bar popup.",
+  "description": "Watches any number of Atlassian Statuspage services (Claude, GitHub, Cloudflare, ...), notifies when one changes, and lists ongoing incidents in a bar popup.",
   "kinds": [
     "bar-widget"
   ],
@@ -13,15 +13,21 @@
     "barWidget": "Panel.qml"
   },
   "barWidget": {
-    "displayName": "Claude status",
-    "description": "Claude service health with change notifications and an ongoing-incident popup.",
+    "displayName": "Service status",
+    "description": "Multi-service status with change notifications, an ongoing-incident popup, and an in-panel settings view.",
     "category": "Info",
     "allowMultiple": false,
     "defaultSection": "right",
     "defaults": {
       "refreshIntervalSec": 300,
       "notify": true,
-      "hideWhenOperational": false
+      "hideWhenOperational": false,
+      "services": [
+        {
+          "name": "Claude",
+          "url": "https://status.claude.com"
+        }
+      ]
     },
     "schema": [
       {
@@ -29,8 +35,8 @@
         "type": "integer",
         "label": "Check interval (seconds)",
         "min": 60,
-        "max": 3600,
-        "step": 30,
+        "max": 21600,
+        "step": 60,
         "defaultValue": 300
       },
       {
