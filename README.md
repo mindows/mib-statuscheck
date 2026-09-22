@@ -45,6 +45,34 @@ where anything sits. Pick from it, or paste any other Statuspage URL.
 | Coinbase | HashiCorp | Shopify | Zoom |
 | Datadog | Jira | Snowflake |  |
 
+## Status colors
+
+The icon and each row are colored by severity, using the **active theme's own**
+`green`, `yellow` and `red` from its `colors.toml`. No stock theme defines
+ok/warning/error roles, but all 22 define those three, so the colors are the
+theme's rather than three hardcoded hexes fighting whatever palette is loaded —
+and they follow a `omarchy theme set` live.
+
+The aggregate icon (bar and popup header):
+
+| Colour | When |
+|---|---|
+| green | every watched service is operational |
+| amber | exactly one is not operational |
+| red | two or more are not operational |
+| grey | nothing read yet, or nothing is known-bad but a feed is unreachable |
+
+A page we cannot reach is **not** counted as down — a failed request is not
+evidence of an outage — but it does prevent an all-clear green, because with a
+feed unread "all operational" is a claim the widget has not earned. The header
+says so explicitly: *"2 of 5 affected · 1 unreachable"*.
+
+Each row grades by that one service's own status instead, since the count rule
+cannot apply to a single service: green operational, amber maintenance or a
+minor issue, red a major or critical outage, grey unreachable. The status word
+beside it stays dim when the service is fine, so an all-clear list reads calm
+rather than shouting in green.
+
 ## The popup
 
 One line per service — glyph, name, and a uniform status word. Providers each
@@ -201,7 +229,8 @@ node -e "const m=new Function(require('fs').readFileSync('Model.js','utf8')
 | `manifest.json` | plugin declaration and settings schema |
 | `Service.qml` | the batched poll, change detection, notifications, URL probing |
 | `Panel.qml` | bar button, status popup, settings view |
-| `Model.js` | presets, URL handling, feed parsing, labels, aggregation |
+| `Model.js` | presets, URL handling, feed parsing, labels, aggregation, severity |
+| `StatusPalette.qml` | the theme's green/amber/red, re-read on a theme switch |
 
 ## Notes
 
@@ -213,6 +242,20 @@ ten racing ones, and the whole readings set updates at once. URLs go in as
 **A failed check keeps the last good reading** and marks the row, rather than
 blanking out what is known. One unreachable feed cannot spoil the others in the
 batch.
+
+**A theme switch does not touch `colors.toml`.** `omarchy theme set` pushes the
+new palette into the running shell over IPC (`shell applyTheme`) and swaps the
+current-theme symlink, so a `FileView` watching that path alone goes stale.
+`StatusPalette` therefore re-reads when the `Color` singleton changes, which
+that IPC call is guaranteed to produce.
+
+**Do not name anything `palette`.** Every QML `Item` already has an inherited
+`palette` property (`QQuickPalette`), and it shadows an `id` of that name —
+which is why the type is `StatusPalette` and the instance is `statusColors`.
+
+**A host with a port is rejected**, so a self-hosted Statuspage on, say,
+`:8899` cannot currently be added; `normalizeServices` also drops such an entry
+on load, so hand-editing will not get around it.
 
 **Arrays out of `shell.json` are not JS arrays.** They arrive as a list proxy
 that indexes and reports `length` correctly but fails `Array.isArray`, which

@@ -546,6 +546,44 @@ function unreachableCount(readings) {
   return count
 }
 
+// Severity of the whole watched set, as a token Palette turns into a color:
+//
+//   "ok"      every service reported operational
+//   "warn"    exactly one is not operational
+//   "down"    two or more are not operational
+//   "unknown" nothing read yet, or nothing is known-bad but a feed is
+//             unreachable — with a page we cannot reach, "all clear" would be
+//             a claim we have not earned, so it is neither green nor an alarm
+//
+// Maintenance counts as not-operational: the service is not running normally,
+// which is the question the color answers. An unreachable feed is not counted
+// as down, because a failed request is not evidence of an outage.
+function severity(readings) {
+  if (readings.length === 0) return "unknown"
+
+  var known = 0
+  for (var i = 0; i < readings.length; i++) {
+    if (readings[i].indicator || readings[i].error) known++
+  }
+  if (known === 0) return "unknown"
+
+  var affected = affectedCount(readings)
+  if (affected >= 2) return "down"
+  if (affected === 1) return "warn"
+  return unreachableCount(readings) > 0 ? "unknown" : "ok"
+}
+
+// Severity of one service on its own. The count rule above cannot apply to a
+// single row, so this grades by how bad that service's own indicator is.
+function severityFor(reading) {
+  if (!reading || reading.error) return "unknown"
+  var indicator = reading.indicator
+  if (!indicator) return "unknown"
+  if (isHealthy(indicator)) return "ok"
+  if (indicator === "major" || indicator === "critical") return "down"
+  return "warn"
+}
+
 // The hero's one-line verdict across every watched service.
 function overallText(readings) {
   if (readings.length === 0) return "No services configured"

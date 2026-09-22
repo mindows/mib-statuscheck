@@ -37,6 +37,12 @@ Panel {
 
   readonly property bool hideWhenOperational: setting("hideWhenOperational", false) === true
   readonly property var rows: monitor.rows
+
+  // Green when everything is operational, amber when exactly one service is
+  // not, red when two or more are — see Model.severity for the full rule and
+  // for why an unreachable feed is neither.
+  readonly property string severity: Model.severity(rows)
+  readonly property color severityColor: statusColors.forSeverity(severity)
   readonly property bool atCapacity: rows.length >= Model.MAX_SERVICES
 
   readonly property string checkedText: {
@@ -202,6 +208,10 @@ Panel {
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
+  // Not named `palette`: every Item already has an inherited `palette`
+  // property (QQuickPalette), and it shadows an id of that name.
+  StatusPalette { id: statusColors }
+
   Service {
     id: monitor
     settings: root.settings
@@ -293,12 +303,11 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: monitor.glyph
-    // `active` is what paints the glyph in the theme's urgent color, so a
-    // degradation reads the same as every other alarming bar widget.
-    active: monitor.alarming
-    // Dimmed until the first reading lands, so an unknown status never looks
-    // like a healthy one.
-    foreground: monitor.known ? barForeground : Qt.darker(barForeground, 1.55)
+    // The severity color, so the bar agrees with the popup: amber for one
+    // service down reads as a lesser thing than red for several, which
+    // `active` (theme urgent, or nothing) could not express. Dimmed until the
+    // first reading lands, so an unknown status never looks like a healthy one.
+    foreground: monitor.known ? root.severityColor : Qt.darker(barForeground, 1.55)
     slotSize: Style.bar.statusSlot
     fontSize: Style.font.caption
     tooltipText: root.opened ? "" : root.tooltip
@@ -375,7 +384,7 @@ Panel {
               Text {
                 textFormat: Text.PlainText
                 text: root.settingsOpen ? "" : monitor.glyph
-                color: monitor.alarming && !root.settingsOpen ? root.urgent : root.foreground
+                color: root.settingsOpen ? root.foreground : root.severityColor
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.display
               }
@@ -459,8 +468,7 @@ Panel {
                   Text {
                     textFormat: Text.PlainText
                     text: Model.indicatorGlyph(modelData.error ? "" : modelData.indicator)
-                    color: modelData.error || (modelData.indicator && !Model.isHealthy(modelData.indicator))
-                      ? root.urgent : root.foreground
+                    color: statusColors.forSeverity(Model.severityFor(modelData))
                     opacity: modelData.indicator || modelData.error ? 1.0 : 0.4
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.bodySmall
@@ -718,7 +726,7 @@ Panel {
         Text {
           textFormat: Text.PlainText
           text: Model.indicatorGlyph(serviceRow.row.error ? "" : serviceRow.row.indicator)
-          color: serviceRow.troubled ? root.urgent : root.foreground
+          color: statusColors.forSeverity(Model.severityFor(serviceRow.row))
           opacity: serviceRow.row.indicator || serviceRow.row.error ? 1.0 : 0.4
           font.family: root.fontFamily
           font.pixelSize: Style.font.icon
@@ -741,7 +749,9 @@ Panel {
           text: serviceRow.row.error
             ? "Unreachable"
             : (serviceRow.row.indicator ? Model.shortStatusLabel(serviceRow.row.indicator) : "…")
-          color: serviceRow.troubled ? root.urgent : root.dim
+          color: serviceRow.troubled
+            ? statusColors.forSeverity(Model.severityFor(serviceRow.row))
+            : root.dim
           font.family: root.fontFamily
           font.pixelSize: Style.font.bodySmall
           Layout.alignment: Qt.AlignVCenter
