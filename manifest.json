@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "omacheckstatus",
+  "name": "Claude status",
+  "version": "1.0.0",
+  "author": "min",
+  "license": "MIT",
+  "description": "Watches status.claude.com, notifies when the service status changes, and shows the ongoing incident in a bar popup.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Claude status",
+    "description": "Claude service health with change notifications and an ongoing-incident popup.",
+    "category": "Info",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "refreshIntervalSec": 300,
+      "notify": true,
+      "hideWhenOperational": false
+    },
+    "schema": [
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Check interval (seconds)",
+        "min": 60,
+        "max": 3600,
+        "step": 30,
+        "defaultValue": 300
+      },
+      {
+        "key": "notify",
+        "type": "boolean",
+        "label": "Notify on status change",
+        "defaultValue": true
+      },
+      {
+        "key": "hideWhenOperational",
+        "type": "boolean",
+        "label": "Only show the icon when something is wrong",
+        "defaultValue": false
+      }
+    ]
+  }
+}
