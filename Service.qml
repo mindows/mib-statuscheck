@@ -93,16 +93,21 @@ Item {
   // argv, not a shell string: an incident title or update body is arbitrary
   // remote text, and the notification sender takes each value as one typed
   // D-Bus parameter, so nothing in it can become a flag or a command.
+  //
+  // Deliberately no `--exec`: Omarchy runs a toast's click action and then
+  // dismisses it, so attaching one turns the ordinary click-to-dismiss gesture
+  // into "open a browser tab". The toast only announces; the bar icon next to
+  // it is how you get to the detail.
   function notify(reading) {
     notifyProcess.running = false
     notifyProcess.command = [
       "omarchy-notification-send",
       "-g", Model.indicatorGlyph(reading.indicator),
       "-u", Model.notificationUrgency(reading.indicator),
+      "-t", String(Model.notificationTimeoutMs(reading.indicator)),
       "--app-name", "omacheckstatus",
       Model.notificationHeadline(reading),
-      Model.notificationBody(reading),
-      "--exec", "xdg-open", root.statusPageUrl
+      Model.notificationBody(reading)
     ]
     notifyProcess.running = true
   }

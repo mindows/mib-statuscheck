@@ -6,7 +6,8 @@ An [Omarchy](https://omarchy.org/) shell plugin that watches
 - Polls the Statuspage feed behind status.claude.com every 5 minutes.
 - Fires one desktop notification whenever the status changes — a new incident,
   a new update on an ongoing one, a component degrading or recovering, or a
-  return to normal. Clicking the notification opens the status page.
+  return to normal. The toast times out on its own (15s for an outage, 6s for
+  a recovery) and carries no click action, so a click just dismisses it.
 - Left-click the bar icon for a popup with the **latest ongoing incident**:
   its title, lifecycle status, impact, how long it has been running, and the
   body of the most recent update. When nothing is wrong it says so.
@@ -40,6 +41,34 @@ Or, once it is pushed somewhere:
 ```bash
 omarchy plugin add <repo-url> --enable --yes
 ```
+
+## Notifications
+
+The toast announces; the bar icon is the state. So the toast always expires on
+its own and the icon stays lit until the service actually recovers — you never
+have to clear anything to get back to a truthful bar.
+
+Dismissing early, all built into Omarchy:
+
+| Input | Effect |
+|---|---|
+| left or right click the toast | dismiss it |
+| `Super` + `,` | dismiss the last notification |
+| `Super` + `Shift` + `,` | dismiss all notifications |
+| `Super` + `Shift` + `Alt` + `,` | notification history |
+
+The toast deliberately has no click action. Omarchy runs a toast's action and
+*then* dismisses it, so attaching one would turn an ordinary click-to-dismiss
+into "open a browser tab". To read more, click the bar icon — or middle-click
+it to go straight to status.claude.com.
+
+Urgency is capped at `normal` for the same reason: Omarchy gives a `critical`
+toast a duration of `0`, meaning it never leaves the screen until dismissed by
+hand. An outage doesn't warrant that when the bar icon is already carrying the
+signal.
+
+Set `"notify": false` on the widget's entry to turn the toasts off entirely
+and rely on the icon alone.
 
 ## Settings
 

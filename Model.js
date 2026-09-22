@@ -241,10 +241,22 @@ function signatureOf(state) {
 
 // ------------------------------------------------------- notification copy
 
+// Never `critical`: Omarchy gives a critical toast a duration of 0, i.e. it
+// stays on screen until the user deals with it. A service outage does not
+// warrant that — the bar icon is the persistent signal, and the toast is just
+// the announcement, so it should always time out on its own.
 function notificationUrgency(indicator) {
-  if (indicator === "critical" || indicator === "major") return "critical"
-  if (indicator === "minor") return "normal"
-  return "low"
+  if (indicator === "none") return "low"
+  return "normal"
+}
+
+// Milliseconds on screen. An outage carries three lines worth reading, so it
+// gets longer than the daemon's 8s default; a recovery is one line and can go
+// at the low-urgency floor. The daemon clamps anything above 30s.
+function notificationTimeoutMs(indicator) {
+  if (indicator === "none") return 6000
+  if (indicator === "minor" || indicator === "maintenance") return 10000
+  return 15000
 }
 
 function notificationHeadline(state) {
