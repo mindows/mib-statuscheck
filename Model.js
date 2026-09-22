@@ -15,46 +15,51 @@
 // Notion, Linear and Heroku all run their own status formats. Their pages
 // cannot be watched here, which is why a pasted URL is verified before it is
 // added rather than silently becoming a row that can only ever error.
+//
+// Sorted by name, case-insensitively, because that is the order the picker
+// shows them in: it groups nothing and promotes nothing, so a reader can
+// predict where any given service sits. Nothing may depend on this order —
+// see DEFAULT_SERVICES.
 var PRESETS = [
-  { name: "Claude",       url: "https://status.claude.com" },
-  { name: "OpenAI",       url: "https://status.openai.com" },
-  { name: "GitHub",       url: "https://www.githubstatus.com" },
-  { name: "Bitbucket",    url: "https://status.bitbucket.org" },
-  { name: "npm",          url: "https://status.npmjs.org" },
-  { name: "Docker",       url: "https://www.dockerstatus.com" },
-  { name: "CircleCI",     url: "https://status.circleci.com" },
-  { name: "Cloudflare",   url: "https://www.cloudflarestatus.com" },
-  { name: "Vercel",       url: "https://www.vercel-status.com" },
-  { name: "Netlify",      url: "https://www.netlifystatus.com" },
-  { name: "DigitalOcean", url: "https://status.digitalocean.com" },
-  { name: "Supabase",     url: "https://status.supabase.com" },
-  { name: "MongoDB",      url: "https://status.mongodb.com" },
-  { name: "Elastic",      url: "https://status.elastic.co" },
-  { name: "Snowflake",    url: "https://status.snowflake.com" },
-  { name: "HashiCorp",    url: "https://status.hashicorp.com" },
-  { name: "Cloudinary",   url: "https://status.cloudinary.com" },
-  { name: "Datadog",      url: "https://status.datadoghq.com" },
-  { name: "Sentry",       url: "https://status.sentry.io" },
-  { name: "Discord",      url: "https://discordstatus.com" },
-  { name: "Zoom",         url: "https://status.zoom.us" },
-  { name: "Atlassian",    url: "https://status.atlassian.com" },
-  { name: "Jira",         url: "https://jira-software.status.atlassian.com" },
-  { name: "Figma",        url: "https://status.figma.com" },
-  { name: "Dropbox",      url: "https://status.dropbox.com" },
-  { name: "Airtable",     url: "https://status.airtable.com" },
-  { name: "Zapier",       url: "https://status.zapier.com" },
   { name: "1Password",    url: "https://status.1password.com" },
-  { name: "Proton",       url: "https://status.proton.me" },
-  { name: "Tailscale",    url: "https://status.tailscale.com" },
-  { name: "Reddit",       url: "https://www.redditstatus.com" },
-  { name: "Stripe",       url: "https://www.stripestatus.com" },
-  { name: "Shopify",      url: "https://www.shopifystatus.com" },
-  { name: "Squarespace",  url: "https://status.squarespace.com" },
-  { name: "Twilio",       url: "https://status.twilio.com" },
-  { name: "Plaid",        url: "https://status.plaid.com" },
+  { name: "Airtable",     url: "https://status.airtable.com" },
+  { name: "Atlassian",    url: "https://status.atlassian.com" },
+  { name: "Bitbucket",    url: "https://status.bitbucket.org" },
+  { name: "CircleCI",     url: "https://status.circleci.com" },
+  { name: "Claude",       url: "https://status.claude.com" },
+  { name: "Cloudflare",   url: "https://www.cloudflarestatus.com" },
+  { name: "Cloudinary",   url: "https://status.cloudinary.com" },
   { name: "Coinbase",     url: "https://status.coinbase.com" },
+  { name: "Datadog",      url: "https://status.datadoghq.com" },
+  { name: "DigitalOcean", url: "https://status.digitalocean.com" },
+  { name: "Discord",      url: "https://discordstatus.com" },
+  { name: "Docker",       url: "https://www.dockerstatus.com" },
+  { name: "Dropbox",      url: "https://status.dropbox.com" },
+  { name: "Elastic",      url: "https://status.elastic.co" },
   { name: "Epic Games",   url: "https://status.epicgames.com" },
-  { name: "Wikipedia",    url: "https://www.wikimediastatus.net" }
+  { name: "Figma",        url: "https://status.figma.com" },
+  { name: "GitHub",       url: "https://www.githubstatus.com" },
+  { name: "HashiCorp",    url: "https://status.hashicorp.com" },
+  { name: "Jira",         url: "https://jira-software.status.atlassian.com" },
+  { name: "MongoDB",      url: "https://status.mongodb.com" },
+  { name: "Netlify",      url: "https://www.netlifystatus.com" },
+  { name: "npm",          url: "https://status.npmjs.org" },
+  { name: "OpenAI",       url: "https://status.openai.com" },
+  { name: "Plaid",        url: "https://status.plaid.com" },
+  { name: "Proton",       url: "https://status.proton.me" },
+  { name: "Reddit",       url: "https://www.redditstatus.com" },
+  { name: "Sentry",       url: "https://status.sentry.io" },
+  { name: "Shopify",      url: "https://www.shopifystatus.com" },
+  { name: "Snowflake",    url: "https://status.snowflake.com" },
+  { name: "Squarespace",  url: "https://status.squarespace.com" },
+  { name: "Stripe",       url: "https://www.stripestatus.com" },
+  { name: "Supabase",     url: "https://status.supabase.com" },
+  { name: "Tailscale",    url: "https://status.tailscale.com" },
+  { name: "Twilio",       url: "https://status.twilio.com" },
+  { name: "Vercel",       url: "https://www.vercel-status.com" },
+  { name: "Wikipedia",    url: "https://www.wikimediastatus.net" },
+  { name: "Zapier",       url: "https://status.zapier.com" },
+  { name: "Zoom",         url: "https://status.zoom.us" }
 ]
 
 // Ten feeds is already a busy popup, and it is 10 sequential curls per tick.
@@ -64,7 +69,9 @@ var MAX_SERVICES = 10
 // shell.json on startup: injecting a default before the host has finished
 // handing us the real settings would overwrite a list the user already has.
 // The default stays implicit until the user changes something.
-var DEFAULT_SERVICES = [PRESETS[0]]
+// Named, not positional: PRESETS is sorted for display, so indexing into it
+// would make the default whatever happens to sort first.
+var DEFAULT_SERVICES = [{ name: "Claude", url: "https://status.claude.com" }]
 
 var INTERVAL_CHOICES = [
   { value: "300",   label: "Every 5 minutes" },

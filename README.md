@@ -28,21 +28,22 @@ Linear and Heroku cannot be watched here.** They each run their own status
 format. A pasted URL is checked before it is added, so one of those fails with
 an explanation instead of becoming a row that can only ever say "unreachable".
 
-The preset list below was verified against the live endpoint. Pick from it, or
-paste any other Statuspage URL.
+The preset list below was verified against the live endpoint, and is offered
+in this order — sorted by name, so nothing is promoted and you can predict
+where anything sits. Pick from it, or paste any other Statuspage URL.
 
 | | | | |
 |---|---|---|---|
-| Claude | Cloudflare | Dropbox | Sentry |
-| OpenAI | Vercel | Airtable | Discord |
-| GitHub | Netlify | Zapier | Zoom |
-| Bitbucket | DigitalOcean | 1Password | Reddit |
-| npm | Supabase | Proton | Stripe |
-| Docker | MongoDB | Tailscale | Shopify |
-| CircleCI | Elastic | Atlassian | Squarespace |
-| Snowflake | HashiCorp | Jira | Twilio |
-| Cloudinary | Datadog | Figma | Plaid |
-| Coinbase | Epic Games | Wikipedia | |
+| 1Password | DigitalOcean | MongoDB | Squarespace |
+| Airtable | Discord | Netlify | Stripe |
+| Atlassian | Docker | npm | Supabase |
+| Bitbucket | Dropbox | OpenAI | Tailscale |
+| CircleCI | Elastic | Plaid | Twilio |
+| Claude | Epic Games | Proton | Vercel |
+| Cloudflare | Figma | Reddit | Wikipedia |
+| Cloudinary | GitHub | Sentry | Zapier |
+| Coinbase | HashiCorp | Shopify | Zoom |
+| Datadog | Jira | Snowflake |  |
 
 ## The popup
 
