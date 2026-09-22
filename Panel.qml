@@ -303,11 +303,12 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: monitor.glyph
-    // The severity color, so the bar agrees with the popup: amber for one
-    // service down reads as a lesser thing than red for several, which
-    // `active` (theme urgent, or nothing) could not express. Dimmed until the
-    // first reading lands, so an unknown status never looks like a healthy one.
-    foreground: monitor.known ? root.severityColor : Qt.darker(barForeground, 1.55)
+    // Monochrome on purpose. The severity colors live in the popup; the bar
+    // stays in the theme's bar foreground like every widget beside it, and the
+    // glyph alone carries the state — a check, a warning triangle, an
+    // exclamation, a times-circle. Dimmed until the first reading lands, so an
+    // unknown status never looks like a healthy one.
+    foreground: monitor.known ? barForeground : Qt.darker(barForeground, 1.55)
     slotSize: Style.bar.statusSlot
     fontSize: Style.font.caption
     tooltipText: root.opened ? "" : root.tooltip

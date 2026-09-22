@@ -53,7 +53,12 @@ ok/warning/error roles, but all 22 define those three, so the colors are the
 theme's rather than three hardcoded hexes fighting whatever palette is loaded —
 and they follow a `omarchy theme set` live.
 
-The aggregate icon (bar and popup header):
+The **bar icon is deliberately monochrome** — it stays in the theme's bar
+foreground like every widget beside it, and the glyph alone carries the state:
+a check, a warning triangle, an exclamation, a times-circle. The colors below
+apply to the popup.
+
+The aggregate severity (popup header):
 
 | Colour | When |
 |---|---|
