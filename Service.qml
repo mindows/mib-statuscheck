@@ -17,8 +17,10 @@ Item {
 
   property var settings: ({})
   signal servicesDiscovered(var services)
-  // ok=false means the page published no readable Statuspage feed.
-  signal probeFinished(string url, bool ok, string name)
+  // ok=false with reachable=true means the page answered but published no
+  // readable Statuspage feed; reachable=false means we never got an answer
+  // (offline, DNS, timeout), which says nothing about the page itself.
+  signal probeFinished(string url, bool ok, bool reachable, string name)
 
   readonly property var services: Model.normalizeServices(
     settings && settings.services !== undefined ? settings.services : Model.DEFAULT_SERVICES)
@@ -130,6 +132,7 @@ Item {
     var nextReadings = ({})
     var nextNotified = ({})
     var toNotify = []
+    var anyRead = false
 
     for (var i = 0; i < services.length; i++) {
       var service = services[i]
@@ -157,6 +160,7 @@ Item {
       }
 
       nextReadings[service.url] = incoming
+      anyRead = true
       var signature = Model.signatureOf(incoming)
       nextNotified[service.url] = signature
 
@@ -167,7 +171,9 @@ Item {
 
     readings = nextReadings
     notified = nextNotified
-    lastSuccessMs = Date.now()
+    // Only a feed that actually answered counts: a batch where every page was
+    // unreachable must not make the footer claim a fresh check.
+    if (anyRead) lastSuccessMs = Date.now()
 
     // Names are what the provider calls itself; adopt them so a pasted URL
     // ends up labelled "GitHub" rather than "Githubstatus".
@@ -176,9 +182,9 @@ Item {
     if (notifyEnabled) for (var n = 0; n < toNotify.length; n++) notify(toNotify[n].name, toNotify[n].reading)
   }
 
-  // Only ever renames, never adds or removes, and only when the feed's own
-  // page name differs from what we stored — so this cannot fight the user's
-  // hand-edited config on every poll.
+  // Only ever renames, never adds or removes, and only a name we made up from
+  // the URL — so a label the user chose, in the panel or by hand, is never
+  // replaced by the provider's.
   function adoptDiscoveredNames(currentReadings) {
     var next = []
     var changed = false
@@ -189,7 +195,8 @@ Item {
       var preset = Model.presetFor(service.url)
       // A preset's name is ours to keep: "Claude" reads better than the page's
       // own "Claude" / "Anthropic Status" drift, and the user picked the label.
-      if (discovered !== "" && !preset && discovered !== service.name) {
+      var derived = service.name === Model.nameFromUrl(service.url)
+      if (discovered !== "" && !preset && derived && discovered !== service.name) {
         next.push({ name: discovered, url: service.url })
         changed = true
       } else {
@@ -265,16 +272,18 @@ Item {
       var body = String(probeOut.text || root._probeBody || "")
       root._probeBody = ""
       root.probeUrl = ""
+      // curl -f exits 22 for an HTTP error status: the server answered, there
+      // is just no feed at that path. Every other failure is the network.
       if (exitCode !== 0) {
-        root.probeFinished(url, false, "")
+        root.probeFinished(url, false, exitCode === 22, "")
         return
       }
       try {
         var reading = Model.parseSummary(body)
-        if (reading.error) root.probeFinished(url, false, "")
-        else root.probeFinished(url, true, String(reading.pageName || ""))
+        if (reading.error) root.probeFinished(url, false, true, "")
+        else root.probeFinished(url, true, true, String(reading.pageName || ""))
       } catch (e) {
-        root.probeFinished(url, false, "")
+        root.probeFinished(url, false, true, "")
       }
     }
   }

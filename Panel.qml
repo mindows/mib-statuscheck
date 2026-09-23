@@ -32,7 +32,9 @@ Panel {
 
   readonly property color foreground: bar ? bar.foreground : Color.foreground
   readonly property color urgent: bar ? bar.urgent : Color.urgent
-  readonly property color dim: Qt.darker(foreground, 1.55)
+  // Faded toward whatever is behind it, not darkened: on a light theme the
+  // foreground is already dark, and Qt.darker would make "dim" text bolder.
+  readonly property color dim: Qt.rgba(foreground.r, foreground.g, foreground.b, 0.6)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
 
   readonly property bool hideWhenOperational: setting("hideWhenOperational", false) === true
@@ -147,6 +149,22 @@ Panel {
     root.addError = ""
   }
 
+  // Indices of the rows an IPC argument names: an exact name wins outright,
+  // otherwise every row whose name or URL contains it. Empty names nothing,
+  // since "" is a substring of everything.
+  function rowsNamed(text) {
+    var needle = String(text || "").trim().toLowerCase()
+    if (needle === "") return []
+    var exact = []
+    var partial = []
+    for (var i = 0; i < rows.length; i++) {
+      var name = rows[i].name.toLowerCase()
+      if (name === needle) exact.push(i)
+      else if (name.indexOf(needle) !== -1 || rows[i].url.toLowerCase().indexOf(needle) !== -1) partial.push(i)
+    }
+    return exact.length > 0 ? exact : partial
+  }
+
   function setInterval(seconds) {
     persistSettings({ refreshIntervalSec: Model.clampInterval(seconds) })
   }
@@ -218,13 +236,15 @@ Panel {
     // The provider knows what it is called; adopt the name so a pasted URL
     // ends up labelled "GitHub" rather than "Githubstatus".
     onServicesDiscovered: function(services) { root.saveServices(services) }
-    onProbeFinished: function(url, ok, name) {
+    onProbeFinished: function(url, ok, reachable, name) {
       if (ok) {
         if (root.addService(name, url)) urlField.text = ""
         return
       }
-      root.addError = "No status feed there. Only Atlassian Statuspage pages work "
-        + "— Google, X, Slack and AWS publish their own formats."
+      root.addError = reachable
+        ? "No status feed there. Only Atlassian Statuspage pages work "
+          + "— Google, X, Slack and AWS publish their own formats."
+        : "Couldn't reach that page. Check the address and your connection."
     }
   }
 
@@ -251,32 +271,30 @@ Panel {
       }
       return "unknown preset"
     }
+    // Destructive, so it acts only on a single unambiguous match.
     function remove(name: string): string {
-      var needle = String(name || "").toLowerCase()
-      for (var i = 0; i < root.rows.length; i++) {
-        var row = root.rows[i]
-        if (row.name.toLowerCase() === needle || row.url.toLowerCase().indexOf(needle) !== -1) {
-          root.removeService(row.url)
-          return "removed " + row.name
-        }
+      var matches = root.rowsNamed(name)
+      if (matches.length === 0) return "not watching " + name
+      if (matches.length > 1) {
+        var names = []
+        for (var i = 0; i < matches.length; i++) names.push(root.rows[matches[i]].name)
+        return "ambiguous, matches " + names.join(", ")
       }
-      return "not watching " + name
+      var row = root.rows[matches[0]]
+      root.removeService(row.url)
+      return "removed " + row.name
     }
     // Open the popup with one service's detail already unfolded, for a keybind
     // along the lines of "show me what's wrong with Cloudflare".
     function expand(name: string): string {
-      var needle = String(name || "").toLowerCase()
-      for (var i = 0; i < root.rows.length; i++) {
-        var row = root.rows[i]
-        if (row.name.toLowerCase().indexOf(needle) !== -1 || row.url.toLowerCase().indexOf(needle) !== -1) {
-          root.open()
-          root.showSettings(false)
-          root.expandedUrl = row.url
-          root.setCursor(i)
-          return "showing " + row.name
-        }
-      }
-      return "not watching " + name
+      var matches = root.rowsNamed(name)
+      if (matches.length === 0) return "not watching " + name
+      var row = root.rows[matches[0]]
+      root.open()
+      root.showSettings(false)
+      root.expandedUrl = row.url
+      root.setCursor(matches[0])
+      return "showing " + row.name
     }
     function interval(seconds: string): string {
       root.setInterval(seconds)
@@ -308,7 +326,7 @@ Panel {
     // glyph alone carries the state — a check, a warning triangle, an
     // exclamation, a times-circle. Dimmed until the first reading lands, so an
     // unknown status never looks like a healthy one.
-    foreground: monitor.known ? barForeground : Qt.darker(barForeground, 1.55)
+    foreground: monitor.known ? barForeground : Qt.rgba(barForeground.r, barForeground.g, barForeground.b, 0.6)
     slotSize: Style.bar.statusSlot
     fontSize: Style.font.caption
     tooltipText: root.opened ? "" : root.tooltip
@@ -340,10 +358,10 @@ Panel {
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
-      // The URL field and the preset filter own their keys while they are
+      // The URL field and both dropdowns own their keys while they are
       // active, or typing "r" would fire a refresh instead of entering a
-      // character.
-      blocked: urlField.activeFocus || presetPicker.popupOpen
+      // character and j/k would move the list and the panel cursor at once.
+      blocked: urlField.activeFocus || presetPicker.popupOpen || intervalPicker.popupOpen
       onMoveRequested: function(dx, dy) {
         if (!root.cursorActive) { root.cursorActive = true; return }
         root.moveCursor(dx, dy)
@@ -438,6 +456,7 @@ Panel {
             }
 
             Dropdown {
+              id: intervalPicker
               width: parent.width
               showLabel: false
               options: Model.INTERVAL_CHOICES

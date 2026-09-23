@@ -403,9 +403,12 @@ function parseSummary(text) {
   var json = JSON.parse(String(text || ""))
   if (!json || typeof json !== "object") return { error: "Unexpected status payload" }
 
+  // Every Statuspage summary carries one of the known indicators. Anything
+  // else is some other JSON that happens to live at this path, and reading it
+  // as "operational" would show a green check for a page we never understood.
   var status = json.status || {}
   var indicator = String(status.indicator || "")
-  if (isUnknown(indicator)) indicator = "none"
+  if (isUnknown(indicator)) return { error: "Not a Statuspage feed" }
 
   var ongoing = []
   var incidents = Array.isArray(json.incidents) ? json.incidents : []

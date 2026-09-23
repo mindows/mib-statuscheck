@@ -141,6 +141,8 @@ omarchy-shell mib-statuscheck expand Cloudflare # open with one detail unfolded
 ```
 
 `expand` is handy for a keybinding that shows what's wrong with one service.
+`remove` only acts on a single match. If a fragment matches several services,
+it lists them and removes nothing.
 
 ## Network and privacy
 
