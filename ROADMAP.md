@@ -14,7 +14,7 @@ What it lacks is **coverage** and **noise control**. Those are the two things
 users of similar tools ask for most, again and again:
 
 1. **Watch the services I actually use.** It only speaks Atlassian
-   Statuspage, so Slack, AWS, Google, Azure, Linear and Heroku are missing.
+   Statuspage, so Slack, AWS, Google, Azure and Heroku are missing.
    Across every project reviewed, "add support for X" was the single most
    common kind of issue.
 2. **Only tell me about the parts I use.** Examples: "GitHub Actions, not
@@ -46,7 +46,12 @@ been cut on purpose (see *Won't do*).
   aggregators), and the Raycast extensions *Is It Alive?*, *AI Provider
   Status* and *GitHub Status*.
 - **Every new feed format proposed below was tested live** from this machine
-  on 2026-09-23 (see *Verified endpoints*).
+  on 2026-09-23 (see [docs/feeds.md](docs/feeds.md)).
+- **The Omarchy marketplace itself** was scanned on 2026-09-23: all
+  4,017 registry entries were searched for status, uptime and outage
+  plugins, and the READMEs of the direct competitors were read (see
+  *Omarchy marketplace competitors*). The earlier GitHub searches had
+  missed them, because most have 0–12 stars.
 - Reddit could not be fetched directly, and web search surfaced almost no
   Reddit threads on this topic. User demand is therefore taken from GitHub
   issues and vendor write-ups instead.
@@ -65,6 +70,32 @@ been cut on purpose (see *Won't do*).
 | Upcoming maintenance | ❌ (active only) | ❌ | ❌ | ❌ | ✅ |
 | Recent history | ❌ | ❌ | ❌ | ✅ 90-day bars | ✅ |
 | Theme-native, keyboard, IPC | ✅ | n/a | n/a | partial | n/a |
+
+### Omarchy marketplace competitors
+
+These plugins are already listed, and they are what an Omarchy user will
+compare us against:
+
+| Plugin | What it does | Overlap with us |
+|---|---|---|
+| `bottelet.is-it-down` (verified) | 10 built-in services (GitHub, AWS, Cloudflare, npm, Claude, OpenAI, Vercel, PyPI, Discord, Netlify), one tab each. Settings drill into a service to toggle components and **AWS regions**, with a filter. A ✕ on a component row mutes it. Custom Statuspage URLs by hand-editing `shell.json` only. "Maybe it's you" when a page is unreachable. | **High.** It already has the component and region filtering planned for v2.2, and an AWS adapter. |
+| `io.github.ollieedgeley.ai-frontier-status` (verified) | 57 AI companies, all off until picked; one interval; click a row to open the page. | Medium, AI vendors only. |
+| `caniworknow.status` (verified) | One verdict from caniworknow.com (GitHub, Cloudflare, Claude, Codex). | Low, but it has the best "Network and system access" README section. |
+| `daan.uptime-kuma`, `io.github.p145085.uptime-kuma`, `scoop.uptime-kuma` | Uptime Kuma in the bar | Covers the homelab case, so our Kuma adapter moves to last in v2.3. |
+| `robinvanderknaap.statuscake`, `narbs.betterstack` | One commercial monitor each | Low |
+
+**What that means for us:**
+
+- Component filtering (#9) is now **catching up**, not differentiating,
+  because `is-it-down` already ships it.
+- **Our real differentiators**, which none of these has all of:
+  - change notifications with a silent baseline
+  - add-any-URL *in the UI*, verified before it is saved
+  - problems-first, keyboard-driven popup
+  - IPC scripting
+  - after v2.3, the widest feed coverage (Slack, Heroku, Google, Instatus,
+    Better Stack, and more)
+- **Lead with those in the listing description and README.**
 
 **Keep these strengths.** They are real advantages, and several competitors
 have open bugs where they get them wrong:
@@ -101,10 +132,22 @@ is a project.
 
 ### v2.1: Quick wins (no new formats)
 
-1. **Fix Notion: it *is* watchable.** (S)
-   `https://www.notion-status.com` serves a working Statuspage feed. It was
-   verified live, and the page name is "Notion". Add it as a preset and
-   correct the README, which lists Notion as unsupported.
+1. **Correct what we already support.** (S)
+   Three fixes found while writing [docs/feeds.md](docs/feeds.md):
+   - **Notion is watchable.** `https://www.notion-status.com` serves a
+     working Statuspage feed (verified live; page name "Notion").
+   - **Linear is watchable, and so is every incident.io page.** incident.io
+     serves a Statuspage-compatible `summary.json`, and the current parser
+     reads `linearstatus.com` correctly today. HashiCorp and Zapier are
+     already on incident.io and keep working the same way.
+   - **An open incident must raise the severity.** On 2026-09-23 GitHub had
+     an open `minor` incident while `status.indicator` said `none`, because
+     every component still reported operational. Today that row reads
+     "Operational". Use the worst of the indicator and the open incidents'
+     `impact`.
+
+   Add Notion and Linear as presets, and remove both from the README's
+   "cannot be watched" list.
 
 2. **Show upcoming maintenance.** (S)
    `scheduled_maintenances` is already in `summary.json`, but `parseSummary`
@@ -141,12 +184,24 @@ is a project.
    the user's order. Gatus's most-voted UI requests are all versions of
    "get healthy things out of my way".
 
-8. **Publish.** (S)
-   Push to GitHub as `mib-statuscheck` and submit it to
-   `omacom/omarchy-plugin-marketplace`. First run through
-   `wbso-ai/omarchy-plugin-security-skill`, which lists the known reasons
-   plugins get rejected: the curl argv handling is already right, so check
-   the rest.
+8. **Get publish-ready, then publish.** (S)
+   Follow the shared
+   [Omarchy publishing playbook](../docs/omarchy-publishing-playbook.md).
+   Its readiness table lists this plugin's gaps as of 2026-09-23:
+   - a root `LICENSE` file (the manifest says MIT, but the validator needs
+     the file)
+   - README: install via `omarchy plugin add` (the `git clone` line goes
+     under Development), plus **Remove** and **Network and privacy**
+     sections
+   - `CHANGELOG.md` and `preview.png`
+   - **a version footer in settings**: "MIB Status Check 2.1.0 · MIT ·
+     Source ↗", read from `manifest.json`, because bar widgets aren't given
+     their manifest
+   - a listing description that leads with the differentiators above
+
+   The ID `mib-statuscheck` is free (checked against the registry and
+   retired IDs). The baseline pre-scan is clean apart from the README
+   `git clone` line.
 
 ### v2.2: Components and noise control
 
@@ -237,30 +292,41 @@ So v2.2 **does not widen the panel or grow the settings view**. Instead:
 
 ### v2.3: Provider adapters (the coverage jump)
 
+**Everything needed to build these is in [docs/feeds.md](docs/feeds.md).**
+For each provider it gives the endpoints, live sample payloads, enum
+values, the mapping to our reading, and the traps, all captured on
+2026-09-23.
+
 12. **Adapter layer in `Model.js`.** (M)
     Each adapter provides `detect(url)`, `endpoint(url)` and
     `parse(text) → reading`, all returning the current reading shape so the
     UI does not change. The batched curl loop stays; each URL just carries
     the adapter id. This is the refactor that makes everything below cheap.
 
-13. **Adapters, in order of demand × ease** (all tested live, see below):
+13. **Adapters, in order of demand × ease** (details in
+    [docs/feeds.md](docs/feeds.md)):
 
     | Adapter | Unlocks | Effort |
     |---|---|---|
-    | incident.io (`/proxy/<host>`) | Linear, and a growing list of AI/dev-tool pages | S |
     | Slack (`slack-status.com/api/v2.0.0/current`) | Slack | S |
     | Heroku (`/api/v4/current-status`) | Heroku | S |
     | Instatus (`/summary.json`) | Instatus-hosted pages | S |
     | Better Stack (`/index.json`) | Better Stack-hosted pages | S |
-    | Uptime Kuma status page (`/api/status-page/<slug>` + heartbeat) | the user's **own homelab** | M |
     | Google Workspace (`google.com/appsstatus/dashboard/incidents.json`) | Gmail, Drive, Meet, … | M (large feed, filter by product) |
     | Google Cloud (`status.cloud.google.com/incidents.json`) | GCP | M (needs component filter to be usable) |
     | AWS (`health.aws.amazon.com/public/currentevents`) | AWS | M (UTF-16 body, region filtering) |
-    | Azure (RSS feed) | Azure | M (RSS only; no clear "all good" state) |
-    | Generic RSS/Atom | anything with a history feed | M (weakest signal, so last) |
+    | Azure (RSS feed) | Azure | M (RSS only; no severity or components) |
+    | Uptime Kuma status page (`/api/status-page/<slug>` + heartbeat) | the user's own homelab | M (unverified live; three Kuma plugins already listed, so last) |
 
-    Google Cloud and AWS are only useful once #9 exists. Unfiltered, AWS
-    would show red somewhere nearly all the time.
+    **Not needed:**
+    - *incident.io*: it already works through the Statuspage parser (#1).
+    - *Generic RSS/Atom*: these feeds are history with no "down now" state.
+      At most, #11 could use one as a fallback.
+
+    Google Cloud and AWS are only useful once #9 exists. For AWS this is
+    measured, not assumed: on 2026-09-23 it had two region-wide disruptions
+    (UAE and Bahrain) open since March, so an unfiltered AWS row would have
+    been red for six months.
 
 14. **Better URL discovery.** (M)
     When a user pastes `github.com`, `notion.so` or `status.notion.so`,
@@ -325,22 +391,10 @@ So v2.2 **does not widen the panel or grow the settings view**. Instead:
 
 ---
 
-## Verified endpoints (2026-09-23)
+## Verified endpoints
 
-| Feed | Result |
-|---|---|
-| `www.notion-status.com/api/v2/summary.json` | 200 JSON, Statuspage, page name "Notion" |
-| `linearstatus.com/proxy/linearstatus.com` | 200 JSON, incident.io (`summary.components`, `ongoing_incidents`, `scheduled_maintenances`) |
-| `status.openai.com/proxy/status.openai.com` | 200 JSON, incident.io (Statuspage endpoint also still works) |
-| `slack-status.com/api/v2.0.0/current` | 200 JSON |
-| `status.heroku.com/api/v4/current-status` | 200 JSON |
-| `status.betterstack.com/index.json` | 200 JSON:API |
-| `www.google.com/appsstatus/dashboard/incidents.json` | 200 JSON, ~400 KB |
-| `status.cloud.google.com/incidents.json` | 200 JSON, ~170 KB |
-| `health.aws.amazon.com/public/currentevents` | 200 JSON, **UTF-16** |
-| `azure.status.microsoft/en-us/status/feed/` | 200 RSS |
-| `status.claude.com/api/v2/scheduled-maintenances/upcoming.json` | 200 JSON |
-| `status.x.com/api/v2/summary.json` | no response, X stays unsupported |
+Moved to [docs/feeds.md](docs/feeds.md), which covers every feed in far
+more depth: endpoints, samples, enums, mapping and traps.
 
 ---
 
