@@ -188,8 +188,6 @@ is a project.
    Follow the shared
    [Omarchy publishing playbook](../docs/omarchy-publishing-playbook.md).
    Its readiness table lists this plugin's gaps as of 2026-09-23:
-   - a root `LICENSE` file (the manifest says MIT, but the validator needs
-     the file)
    - README: install via `omarchy plugin add` (the `git clone` line goes
      under Development), plus **Remove** and **Network and privacy**
      sections
@@ -199,8 +197,9 @@ is a project.
      their manifest
    - a listing description that leads with the differentiators above
 
-   The ID `mib-statuscheck` is free (checked against the registry and
-   retired IDs). The baseline pre-scan is clean apart from the README
+   Done: the root `LICENSE` (MIT, © 2026 mindows). The repo will be
+   `github.com/mindows/mib-statuscheck`. The ID `mib-statuscheck` is kept,
+   and it is free (checked against the registry and retired IDs). The baseline pre-scan is clean apart from the README
    `git clone` line.
 
 ### v2.2: Components and noise control

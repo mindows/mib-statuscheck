@@ -270,3 +270,7 @@ another list-valued setting.
 
 Requires `curl`, and `jq` (already an Omarchy dependency) for the notification
 sender.
+
+## License
+
+[MIT](LICENSE)
