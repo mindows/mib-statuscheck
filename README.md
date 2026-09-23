@@ -57,7 +57,7 @@ on the [roadmap](ROADMAP.md).
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/mindows/mib-statuscheck --enable
+omarchy plugin add https://github.com/mindows/mib-statuscheck.git --enable
 ```
 
 You'll be asked which bar section to put it in (the default is right). It
