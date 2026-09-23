@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "mib-statuscheck",
   "name": "MIB Status Check",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "author": "min",
   "license": "MIT",
-  "description": "Watches any number of Atlassian Statuspage services (Claude, GitHub, Cloudflare, ...), notifies when one changes, and lists ongoing incidents in a bar popup.",
+  "description": "Watch up to 10 Atlassian Statuspage services: 39 presets, or paste any status page URL and it is verified before it is added. One quiet notification per status change, and a keyboard-driven popup with the ongoing incident.",
   "kinds": [
     "bar-widget"
   ],

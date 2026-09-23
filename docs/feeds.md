@@ -1,7 +1,7 @@
 # Feed ingestion guide
 
 How to read each provider's status feed and turn it into the plugin's
-reading. This is the reference for v2.3 of the [roadmap](../ROADMAP.md).
+reading. This is the reference for v1.3 of the [roadmap](../ROADMAP.md).
 
 Every endpoint, field and enum value below was fetched live on **2026-09-23**,
 unless it is marked **unverified**. Unverified means the value comes from
@@ -158,7 +158,7 @@ which the #9 page uses to collapse groups.
 `status.indicator` is `none`, because every component still reports
 operational. Right now the row reads "Operational" and still shows the
 incident's title. **Fix:** set `indicator = worst(status.indicator, impact of
-each open incident)`. This belongs in v2.1.
+each open incident)`. This belongs in v1.1.
 
 ---
 
@@ -711,7 +711,7 @@ MAINTENANCE.
   for private-range hosts only.
 - **Competition:** three Kuma plugins are already on the Omarchy
   marketplace (`daan.uptime-kuma`, `io.github.p145085.uptime-kuma`,
-  `scoop.uptime-kuma`). Keep this adapter at the bottom of v2.3.
+  `scoop.uptime-kuma`). Keep this adapter at the bottom of v1.3.
 
 ---
 

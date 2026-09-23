@@ -57,7 +57,7 @@ on the [roadmap](ROADMAP.md).
 ## Requirements
 
 - Omarchy, with its shell
-- `curl` and `jq`, both installed with Omarchy
+- `curl`, installed with Omarchy
 
 ## Install
 

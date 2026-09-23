@@ -1,6 +1,6 @@
 # mib-statuscheck roadmap
 
-*Written 2026-09-23, against v2.0.0.*
+*Written 2026-09-23, against v1.0.0.*
 
 ## Summary
 
@@ -78,10 +78,10 @@ compare us against:
 
 | Plugin | What it does | Overlap with us |
 |---|---|---|
-| `bottelet.is-it-down` (verified) | 10 built-in services (GitHub, AWS, Cloudflare, npm, Claude, OpenAI, Vercel, PyPI, Discord, Netlify), one tab each. Settings drill into a service to toggle components and **AWS regions**, with a filter. A ✕ on a component row mutes it. Custom Statuspage URLs by hand-editing `shell.json` only. "Maybe it's you" when a page is unreachable. | **High.** It already has the component and region filtering planned for v2.2, and an AWS adapter. |
+| `bottelet.is-it-down` (verified) | 10 built-in services (GitHub, AWS, Cloudflare, npm, Claude, OpenAI, Vercel, PyPI, Discord, Netlify), one tab each. Settings drill into a service to toggle components and **AWS regions**, with a filter. A ✕ on a component row mutes it. Custom Statuspage URLs by hand-editing `shell.json` only. "Maybe it's you" when a page is unreachable. | **High.** It already has the component and region filtering planned for v1.2, and an AWS adapter. |
 | `io.github.ollieedgeley.ai-frontier-status` (verified) | 57 AI companies, all off until picked; one interval; click a row to open the page. | Medium, AI vendors only. |
 | `caniworknow.status` (verified) | One verdict from caniworknow.com (GitHub, Cloudflare, Claude, Codex). | Low, but it has the best "Network and system access" README section. |
-| `daan.uptime-kuma`, `io.github.p145085.uptime-kuma`, `scoop.uptime-kuma` | Uptime Kuma in the bar | Covers the homelab case, so our Kuma adapter moves to last in v2.3. |
+| `daan.uptime-kuma`, `io.github.p145085.uptime-kuma`, `scoop.uptime-kuma` | Uptime Kuma in the bar | Covers the homelab case, so our Kuma adapter moves to last in v1.3. |
 | `robinvanderknaap.statuscake`, `narbs.betterstack` | One commercial monitor each | Low |
 
 **What that means for us:**
@@ -93,7 +93,7 @@ compare us against:
   - add-any-URL *in the UI*, verified before it is saved
   - problems-first, keyboard-driven popup
   - IPC scripting
-  - after v2.3, the widest feed coverage (Slack, Heroku, Google, Instatus,
+  - after v1.3, the widest feed coverage (Slack, Heroku, Google, Instatus,
     Better Stack, and more)
 - **Lead with those in the listing description and README.**
 
@@ -130,7 +130,7 @@ have open bugs where they get them wrong:
 Effort: **S** takes an evening or less, **M** takes a few sessions, and **L**
 is a project.
 
-### v2.1: Quick wins (no new formats)
+### v1.1: Quick wins (no new formats)
 
 1. **Correct what we already support.** (S)
    Three fixes found while writing [docs/feeds.md](docs/feeds.md):
@@ -167,7 +167,7 @@ is a project.
    This is the cheapest cure for noise. Until the per-service page (#9)
    exists, set it with `n` on the highlighted row, which cycles the level and
    shows it on the row, or with IPC (`notify GitHub outages`). Keep it out of
-   the settings view, which stays global-only (see *Popup space* under v2.2).
+   the settings view, which stays global-only (see *Popup space* under v1.2).
 
 5. **Report "Offline" when every feed fails.** (S)
    When every request in a batch fails, the problem is almost certainly this
@@ -177,7 +177,7 @@ is a project.
 
 6. **Allow hosts with a port.** (S)
    The README already calls this a gap. It unblocks self-hosted Statuspage
-   clones and the Uptime Kuma adapter (v2.3). Keep the https requirement.
+   clones and the Uptime Kuma adapter (v1.3). Keep the https requirement.
 
 7. **Sort problems first.** (S)
    In the popup, put non-operational rows at the top, then show the rest in
@@ -188,7 +188,7 @@ is a project.
    Follow the author's Omarchy publishing playbook (kept outside this
    repo). Still to do:
    - `CHANGELOG.md`
-   - **a version footer in settings**: "MIB Status Check 2.1.0 · MIT ·
+   - **a version footer in settings**: "MIB Status Check 1.1.0 · MIT ·
      Source ↗", read from `manifest.json`, because bar widgets aren't given
      their manifest
    - a listing description that leads with the differentiators above
@@ -202,14 +202,14 @@ is a project.
    PR templates. The ID `mib-statuscheck` is kept, and it is free (checked
    against the registry and retired IDs).
 
-### v2.2: Components and noise control
+### v1.2: Components and noise control
 
 **Popup space.** The popup is 380px wide and at most 560px tall, and there
 are two views: status and settings. Component counts vary far more than
 that space can absorb. Checked 2026-09-23: Claude has 6, GitHub has 12,
 Cloudflare has **480** in 8 groups (mostly data-centre locations). A
 checklist tucked into either existing view cannot handle the large pages.
-So v2.2 **does not widen the panel or grow the settings view**. Instead:
+So v1.2 **does not widen the panel or grow the settings view**. Instead:
 
 - Actions that apply at a moment (snooze) are **keys on the row**, with no
   settings UI.
@@ -289,7 +289,7 @@ So v2.2 **does not widen the panel or grow the settings view**. Instead:
     needs `incidents.json`, so fetch it only for the row being unfolded
     (lazily), not on every tick.
 
-### v2.3: Provider adapters (the coverage jump)
+### v1.3: Provider adapters (the coverage jump)
 
 **Everything needed to build these is in [docs/feeds.md](docs/feeds.md).**
 For each provider it gives the endpoints, live sample payloads, enum
@@ -332,7 +332,7 @@ values, the mapping to our reading, and the traps, all captured on
     follow the redirect and try every adapter's `detect`/probe, so the right
     feed is found without the user knowing about `summary.json`.
 
-### v2.4: Polish and reach
+### v1.4: Polish and reach
 
 15. **Searchable preset catalog, ~150 entries.** (M)
     A filter field in settings in place of the flat dropdown. Store the

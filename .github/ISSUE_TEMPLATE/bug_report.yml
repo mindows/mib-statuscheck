@@ -22,7 +22,7 @@ body:
       description: >-
         Run `jq -r .version ~/.config/omarchy/plugins/mib-statuscheck/manifest.json`
         and `git -C ~/.config/omarchy/plugins/mib-statuscheck rev-parse --short HEAD`.
-      placeholder: 2.0.0 @ 60290ec
+      placeholder: 1.0.0 @ c9fadaa
     validations:
       required: true
   - type: input
