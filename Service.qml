@@ -81,7 +81,7 @@ Item {
     if (services.length === 0) return
     lastAttemptMs = Date.now()
     loading = true
-    var argv = ["bash", "-c", fetchScript, "omacheckstatus"]
+    var argv = ["bash", "-c", fetchScript, "mib-statuscheck"]
     for (var i = 0; i < services.length; i++) argv.push(Model.endpointFor(services[i].url))
     fetchProcess.command = argv
     fetchProcess.running = true
@@ -213,7 +213,7 @@ Item {
       "-g", Model.indicatorGlyph(reading.indicator),
       "-u", Model.notificationUrgency(reading.indicator),
       "-t", String(Model.notificationTimeoutMs(reading.indicator)),
-      "--app-name", "omacheckstatus",
+      "--app-name", "mib-statuscheck",
       Model.notificationHeadline(serviceName, reading),
       Model.notificationBody(reading)
     ])

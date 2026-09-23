@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "omacheckstatus",
-  "name": "Service status",
+  "id": "mib-statuscheck",
+  "name": "MIB Status Check",
   "version": "2.0.0",
   "author": "min",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "barWidget": "Panel.qml"
   },
   "barWidget": {
-    "displayName": "Service status",
+    "displayName": "MIB Status Check",
     "description": "Multi-service status with change notifications, an ongoing-incident popup, and an in-panel settings view.",
     "category": "Info",
     "allowMultiple": false,

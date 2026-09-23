@@ -14,8 +14,8 @@ import "Model.js" as Model
 // check interval.
 Panel {
   id: root
-  moduleName: "omacheckstatus"
-  ipcTarget: "omacheckstatus"
+  moduleName: "mib-statuscheck"
+  ipcTarget: "mib-statuscheck"
   manageIpc: false
 
   // Which service row is expanded, by url. Only one at a time: with ten

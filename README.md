@@ -1,4 +1,4 @@
-# omacheckstatus
+# mib-statuscheck
 
 An [Omarchy](https://omarchy.org/) shell plugin that watches service status
 pages from the status bar.
@@ -144,10 +144,10 @@ subsequent changes notify.
 ## Install
 
 ```bash
-git clone <this repo> ~/dev/omacheckstatus
-ln -s ~/dev/omacheckstatus ~/.config/omarchy/plugins/omacheckstatus
+git clone <this repo> ~/dev/mib-statuscheck
+ln -s ~/dev/mib-statuscheck ~/.config/omarchy/plugins/mib-statuscheck
 omarchy-shell shell rescanPlugins
-omarchy plugin enable omacheckstatus
+omarchy plugin enable mib-statuscheck
 ```
 
 Or, once it is pushed somewhere:
@@ -163,7 +163,7 @@ in `~/.config/omarchy/shell.json`:
 
 ```json
 {
-  "id": "omacheckstatus",
+  "id": "mib-statuscheck",
   "refreshIntervalSec": 300,
   "notify": true,
   "hideWhenOperational": false,
@@ -192,16 +192,16 @@ The widget registers an IPC target, so a dotfiles bootstrap can set the list up
 without hand-editing `shell.json`:
 
 ```bash
-omarchy-shell omacheckstatus state            # one line per service
-omarchy-shell omacheckstatus presets          # every preset name
-omarchy-shell omacheckstatus addPreset GitHub # add by preset name
-omarchy-shell omacheckstatus add status.figma.com  # add by URL (verified first)
-omarchy-shell omacheckstatus remove GitHub    # by name or URL fragment
-omarchy-shell omacheckstatus interval 900     # seconds
-omarchy-shell omacheckstatus refresh          # check now
-omarchy-shell omacheckstatus toggle           # open/close the popup
-omarchy-shell omacheckstatus openSettings     # open on the settings view
-omarchy-shell omacheckstatus expand Cloudflare # open with one detail unfolded
+omarchy-shell mib-statuscheck state            # one line per service
+omarchy-shell mib-statuscheck presets          # every preset name
+omarchy-shell mib-statuscheck addPreset GitHub # add by preset name
+omarchy-shell mib-statuscheck add status.figma.com  # add by URL (verified first)
+omarchy-shell mib-statuscheck remove GitHub    # by name or URL fragment
+omarchy-shell mib-statuscheck interval 900     # seconds
+omarchy-shell mib-statuscheck refresh          # check now
+omarchy-shell mib-statuscheck toggle           # open/close the popup
+omarchy-shell mib-statuscheck openSettings     # open on the settings view
+omarchy-shell mib-statuscheck expand Cloudflare # open with one detail unfolded
 ```
 
 `expand` makes a useful keybind: "show me what's wrong with X".
