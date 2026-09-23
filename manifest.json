@@ -22,12 +22,7 @@
       "refreshIntervalSec": 300,
       "notify": true,
       "hideWhenOperational": false,
-      "services": [
-        {
-          "name": "Claude",
-          "url": "https://status.claude.com"
-        }
-      ]
+      "services": []
     },
     "schema": [
       {

@@ -18,8 +18,7 @@
 //
 // Sorted by name, case-insensitively, because that is the order the picker
 // shows them in: it groups nothing and promotes nothing, so a reader can
-// predict where any given service sits. Nothing may depend on this order —
-// see DEFAULT_SERVICES.
+// predict where any given service sits. Nothing may depend on this order.
 var PRESETS = [
   { name: "1Password",    url: "https://status.1password.com" },
   { name: "Airtable",     url: "https://status.airtable.com" },
@@ -65,13 +64,11 @@ var PRESETS = [
 // Ten feeds is already a busy popup, and it is 10 sequential curls per tick.
 var MAX_SERVICES = 10
 
-// What a config with no `services` key means. Deliberately not written to
-// shell.json on startup: injecting a default before the host has finished
-// handing us the real settings would overwrite a list the user already has.
-// The default stays implicit until the user changes something.
-// Named, not positional: PRESETS is sorted for display, so indexing into it
-// would make the default whatever happens to sort first.
-var DEFAULT_SERVICES = [{ name: "Claude", url: "https://status.claude.com" }]
+// What a config with no `services` key means: nothing is watched until the
+// user picks something. Which services matter is theirs to say, and a widget
+// that starts polling a provider they never chose is making requests on their
+// behalf that they did not ask for.
+var DEFAULT_SERVICES = []
 
 var INTERVAL_CHOICES = [
   { value: "300",   label: "Every 5 minutes" },

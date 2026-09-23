@@ -66,7 +66,7 @@ omarchy plugin add https://github.com/mindows/mib-statuscheck.git --enable
 ```
 
 You'll be asked which bar section to put it in (the default is right). It
-starts out watching Claude. Click the icon, then the gear, to choose your
+starts out watching nothing. Click the icon, then the gear, to choose your
 services.
 
 ## Usage
@@ -113,7 +113,7 @@ Managed in the popup's settings view and stored on the widget's entry in
 
 | Key | Default | Meaning |
 |---|---|---|
-| `services` | Claude | Pages to watch, up to 10. Omit the key to get the Claude default. |
+| `services` | none | Pages to watch, up to 10. |
 | `refreshIntervalSec` | `300` | Seconds between checks. The settings view offers 5m / 15m / 30m / 1h / 3h; a hand-edited value is clamped to 60–21600. |
 | `notify` | `true` | Send a notification when a service's status changes. |
 | `hideWhenOperational` | `false` | Keep the icon off the bar unless something is wrong. |
