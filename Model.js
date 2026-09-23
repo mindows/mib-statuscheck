@@ -126,6 +126,11 @@ function normalizePageUrl(raw) {
   text = text.replace(/\s+/g, "")
   text = text.replace(/[#?].*$/, "")
   if (!/^https?:\/\//i.test(text)) text = "https://" + text
+  // Scheme and host are case-insensitive; the path is not. Lowercasing here
+  // is what lets "Status.Claude.com" dedupe against, and match, the preset.
+  text = text.replace(/^(https?:\/\/)([^\/]*)/i, function(all, scheme, host) {
+    return scheme.toLowerCase() + host.toLowerCase()
+  })
   text = text.replace(/\/+$/, "")
   // Paste the feed and we'll take the page it belongs to.
   text = text.replace(/\/api\/v2\/[a-z_\-]+\.json$/i, "")
@@ -194,16 +199,6 @@ function normalizeServices(raw) {
     out.push({ name: name, url: url })
   }
   return out
-}
-
-function servicesEqual(a, b) {
-  var left = normalizeServices(a)
-  var right = normalizeServices(b)
-  if (left.length !== right.length) return false
-  for (var i = 0; i < left.length; i++) {
-    if (left[i].url !== right[i].url || left[i].name !== right[i].name) return false
-  }
-  return true
 }
 
 // --------------------------------------------------------------- indicators

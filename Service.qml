@@ -297,9 +297,19 @@ Item {
   }
 
   // A newly added service should show a reading immediately rather than at the
-  // next tick, and a laptop that slept through several intervals wakes up with
-  // a stale set and a timer that won't fire for a while yet.
-  onServicesChanged: Qt.callLater(root.refresh)
+  // next tick. Settings arrive as a whole new object on every change, so
+  // `services` is rebuilt even when only a toggle moved; compare the watched
+  // URLs so flipping "notify" or renaming a row does not refetch every feed.
+  property string _watchedUrls: ""
+  onServicesChanged: {
+    var urls = services.map(function(service) { return service.url }).join("\n")
+    if (urls === _watchedUrls) return
+    _watchedUrls = urls
+    Qt.callLater(root.refresh)
+  }
+
+  // A laptop that slept through several intervals wakes up with a stale set
+  // and a timer that won't fire for a while yet.
 
   Timer {
     interval: 30000
