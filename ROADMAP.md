@@ -119,9 +119,12 @@ is a project.
 
 4. **Per-service notification level.** (S–M)
    Each service gets a notify setting: `all` / `outages only` (skip minor
-   and maintenance) / `off`. Set it in the settings view, and add a
-   `notifyLevel` key to each service entry. The icon still shows the true
-   state; only the toasts are filtered. This is the cheapest cure for noise.
+   and maintenance) / `off`, stored as a `notifyLevel` key on the service
+   entry. The icon still shows the true state; only the toasts are filtered.
+   This is the cheapest cure for noise. Until the per-service page (#9)
+   exists, set it with `n` on the highlighted row, which cycles the level and
+   shows it on the row, or with IPC (`notify GitHub outages`). Keep it out of
+   the settings view, which stays global-only (see *Popup space* under v2.2).
 
 5. **Report "Offline" when every feed fails.** (S)
    When every request in a batch fails, the problem is almost certainly this
@@ -147,18 +150,83 @@ is a project.
 
 ### v2.2: Components and noise control
 
-9. **Component filter.** (M)
-   In a row's detail view, the component list becomes a checklist of what to
-   watch. The service's status and notifications are then computed from the
-   **selected components** (plus any incident touching them), not from the
-   page-wide indicator. Store it as `components: ["Actions", "API
-   Requests"]`, matched by component id with name as fallback. This is the
-   most important feature in the commercial tools, and the Statuspage feed
-   already includes the data.
+**Popup space.** The popup is 380px wide and at most 560px tall, and there
+are two views: status and settings. Component counts vary far more than
+that space can absorb. Checked 2026-09-23: Claude has 6, GitHub has 12,
+Cloudflare has **480** in 8 groups (mostly data-centre locations). A
+checklist tucked into either existing view cannot handle the large pages.
+So v2.2 **does not widen the panel or grow the settings view**. Instead:
+
+- Actions that apply at a moment (snooze) are **keys on the row**, with no
+  settings UI.
+- Per-service configuration moves to **its own page** inside the popup.
+- The settings view keeps only global things: the service list, the check
+  interval, and the notify / hide-when-operational toggles.
+
+9. **Per-service page and component filter.** (M)
+   A third popup view, swapped in the same way settings already is, holding
+   everything that belongs to one service:
+
+   ```
+   ┌ ← GitHub ─────────────────────────┐
+   │ Notify   [All ▾]   Muted: no      │
+   │ Components   1 of 12 ignored      │
+   │ ┌ filter… ────────────────────┐   │
+   │ ☑ Git Operations                  │
+   │ ☑ API Requests                    │
+   │ ☐ Codespaces                      │
+   │ ☑ Actions                         │
+   │ …  (scrolls)                      │
+   └───────────────────────────────────┘
+   ```
+
+   - **Ways in:** `e` on the highlighted row, or "Watch settings…" in the
+     unfolded detail. In the settings view, clicking a service in the list
+     opens the same page. Each settings-list row shows a one-line summary,
+     e.g. *"1 ignored · outages only"*.
+   - **Space:** the list gets the full 560px and scrolls. The filter field
+     appears only on pages with more than ~20 components, and grouped pages
+     (Cloudflare) start with their groups collapsed.
+   - **Keys:** `j`/`k` to move, `Space` to toggle, `/` to filter, `Esc` to go
+     back. The filter field owns the keyboard while focused, as the URL
+     field does now.
+   - **Ignore list, not an allow list.** Most people want to drop a few
+     noisy parts ("I don't use Codespaces"), not list everything they need.
+     Store `ignore: ["<component id>", ...]`, matched by id with name as a
+     fallback. The common case is one or two clicks, and a component the
+     provider adds later is watched by default, which is the safe failure.
+   - **"Only these" mode.** A toggle at the top of the list switches to an
+     allow list (`only: [...]`) for huge pages like Cloudflare or AWS
+     regions, where ignoring 470 locations one by one is absurd.
+   - **Effect:** the service's status and notifications are computed from
+     the watched components (plus any incident touching them), not from the
+     page-wide indicator. When something is filtered out, the row says so,
+     in dim text, e.g. *"Operational · 1 ignored issue"*, so the popup
+     never hides a real outage without saying it has.
+   - The notify level from #4 moves here too.
+
+   This is the most important feature in the commercial tools, and the
+   Statuspage feed already carries the component data.
+
+   **Ignore from the incident itself.** (S, with #9)
+   In the unfolded detail, each name in the affected-components line is
+   clickable: "Ignore Codespaces". It is set up at the moment a component
+   annoys you, which is when you care, so many users would never need to
+   open the component page at all.
+
+   **CLI path.** (S, with #9)
+   IPC commands for dotfiles and power users, in the style of the existing
+   ones: `components GitHub` lists the components with ids and marks the
+   ignored ones, `ignore GitHub Codespaces` and `unignore GitHub Codespaces`
+   change the list, and `only Cloudflare "Frankfurt, Germany - (FRA)"`
+   switches to an allow list.
 
 10. **Snooze.** (S)
-    Mute a service's toasts for 1h / 4h / until it recovers. Add a keyboard
-    shortcut (`m`) and an IPC command (`snooze GitHub 1h`). Covers the
+    A row action, not a setting. `m` on the highlighted row cycles 1h → 4h →
+    until it recovers → off. The row shows a muted-bell glyph and
+    *"Muted · 52m"*, and the per-service page shows the same state. IPC:
+    `snooze GitHub 1h`, `snooze GitHub off`. Snooze silences toasts only;
+    the icon and the row still show the true state. This covers the
     quiet-hours request without adding a scheduler.
 
 11. **"Recently resolved" line.** (M)
