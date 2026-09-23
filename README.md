@@ -2,6 +2,11 @@
 
 ![MIB Status Check popup: five watched services, with OpenAI reporting a minor issue](preview.png)
 
+Why bother getting notifs about services going down? How often does something
+like GitHub actually go down? More often than you'd think, and usually right
+when a push hangs or Claude stops answering and you're left wondering whether
+it's you or them. This answers that in a glance.
+
 An [Omarchy](https://omarchy.org/) bar widget that watches the status pages of
 the services you depend on (GitHub, Claude, Cloudflare and many more). The bar
 shows the worst status across all of them, you get one quiet notification per
