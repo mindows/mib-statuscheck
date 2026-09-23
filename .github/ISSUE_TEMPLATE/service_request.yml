@@ -1,0 +1,20 @@
+name: Service request
+description: Ask for a status page to be added as a preset, or report one that can't be watched.
+labels: [service]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: Status page URL
+      placeholder: https://status.example.com
+    validations:
+      required: true
+  - type: textarea
+    id: feed
+    attributes:
+      label: Feed check
+      description: >-
+        Paste the output of
+        `curl -fsS <url>/api/v2/summary.json | jq '.page.name, .status.indicator'`.
+        If it fails, the page probably uses its own format; say so, and we'll look at it for the roadmap.
+      render: text

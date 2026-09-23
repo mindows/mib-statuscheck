@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest an idea or a change in behavior.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Please check [ROADMAP.md](https://github.com/mindows/mib-statuscheck/blob/main/ROADMAP.md) first; it may already be planned or ruled out.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind

@@ -146,8 +146,8 @@ is a project.
      "Operational". Use the worst of the indicator and the open incidents'
      `impact`.
 
-   Add Notion and Linear as presets, and remove both from the README's
-   "cannot be watched" list.
+   Add Notion and Linear as presets. (The README's "not watchable" list
+   has already been corrected.)
 
 2. **Show upcoming maintenance.** (S)
    `scheduled_maintenances` is already in `summary.json`, but `parseSummary`
@@ -185,22 +185,22 @@ is a project.
    "get healthy things out of my way".
 
 8. **Get publish-ready, then publish.** (S)
-   Follow the shared
-   [Omarchy publishing playbook](../docs/omarchy-publishing-playbook.md).
-   Its readiness table lists this plugin's gaps as of 2026-09-23:
-   - README: install via `omarchy plugin add` (the `git clone` line goes
-     under Development), plus **Remove** and **Network and privacy**
-     sections
-   - `CHANGELOG.md` and `preview.png`
+   Follow the author's Omarchy publishing playbook (kept outside this
+   repo). Still to do:
+   - `CHANGELOG.md`
    - **a version footer in settings**: "MIB Status Check 2.1.0 · MIT ·
      Source ↗", read from `manifest.json`, because bar widgets aren't given
      their manifest
    - a listing description that leads with the differentiators above
+   - a clean install test from GitHub, a tagged release, then the
+     marketplace submission
 
-   Done: the root `LICENSE` (MIT, © 2026 mindows). The repo will be
-   `github.com/mindows/mib-statuscheck`. The ID `mib-statuscheck` is kept,
-   and it is free (checked against the registry and retired IDs). The baseline pre-scan is clean apart from the README
-   `git clone` line.
+   Done: the public repo at `github.com/mindows/mib-statuscheck`; the root
+   `LICENSE` (MIT, © 2026 mindows); `preview.png`; a README with install via
+   `omarchy plugin add`, **Network and privacy**, **Remove** and
+   troubleshooting sections; `CONTRIBUTING.md`, `SECURITY.md`, and issue and
+   PR templates. The ID `mib-statuscheck` is kept, and it is free (checked
+   against the registry and retired IDs).
 
 ### v2.2: Components and noise control
 

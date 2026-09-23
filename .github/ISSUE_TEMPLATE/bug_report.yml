@@ -1,0 +1,40 @@
+name: Bug report
+description: Something doesn't work as described.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: services
+    attributes:
+      label: Services involved
+      description: Which status pages were you watching, and which one misbehaved? Include their URLs.
+      placeholder: https://www.githubstatus.com
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version and commit
+      description: >-
+        Run `jq -r .version ~/.config/omarchy/plugins/mib-statuscheck/manifest.json`
+        and `git -C ~/.config/omarchy/plugins/mib-statuscheck rev-parse --short HEAD`.
+      placeholder: 2.0.0 @ 60290ec
+    validations:
+      required: true
+  - type: input
+    id: omarchy
+    attributes:
+      label: Omarchy version
+      description: Run `omarchy version`.
+      placeholder: 4.0.4-1
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, the output of `omarchy-shell mib-statuscheck state`, or your settings entry from `~/.config/omarchy/shell.json`.
