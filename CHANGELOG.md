@@ -5,6 +5,11 @@ Notable changes to MIB Status Check. Versions follow `version` in
 
 ## Unreleased
 
+- Fix: the Zoom and Bitbucket presets always showed *Unreachable*, because
+  both status pages have moved. The presets point at the new pages, and the
+  regular check now follows redirects (https only, at most three hops), so a
+  service saved under an old address recovers on its own (#1).
+
 ## 1.0.1 — 2026-09-24
 
 - Fix: a watched status page could forge the batch's delimiter lines in its
