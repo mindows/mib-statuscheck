@@ -82,6 +82,13 @@ endpoint and emits a delimited stream, so ten feeds cost one process instead of
 ten racing ones, and the whole readings set updates at once. URLs go in as
 `"$@"` argv, so a hand-edited config can never become a command.
 
+**Every response has a size ceiling.** The URLs are whatever the user pasted,
+so `fetch.sh` wraps each request, the batch and the probe alike: it keeps the
+deadline, reads at most 1 MiB + 1 byte, and prints nothing for a body that
+reaches the extra byte, so nothing oversized reaches the `StdioCollector`. The
+ceiling is about four times the largest preset feed (~270 KB), since feeds
+grow during an incident. An oversized feed shows as "Status feed too large".
+
 **A failed check keeps the last good reading** and marks the row, rather than
 blanking out what is known. One unreachable feed cannot spoil the others in the
 batch.

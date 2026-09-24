@@ -470,7 +470,11 @@ function parseBatch(text) {
     var end = line.match(/^===END (-?\d+)===$/)
     if (end && url !== null) {
       var exitCode = Number(end[1])
-      if (exitCode !== 0) {
+      if (exitCode === 63) {
+        // fetch.sh's ceiling: the page answered, but with far more than any
+        // status feed needs, so it was dropped unread.
+        out[url] = { error: "Status feed too large" }
+      } else if (exitCode !== 0) {
         out[url] = { error: "Could not reach the status page" }
       } else {
         try {

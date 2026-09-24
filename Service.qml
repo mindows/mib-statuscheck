@@ -11,9 +11,13 @@ import "Model.js" as Model
 // ten QML processes racing to finish is a lot of moving parts for a background
 // poll, and one delimited stream means the whole readings set updates at once.
 // The URLs go in as `"$@"` argv, so a hand-edited config can never become a
-// command.
+// command. Every request, the batch and the add-time probe alike, goes
+// through fetch.sh, which caps how much of an answer is read.
 Item {
   id: root
+
+  readonly property string fetchPath:
+    decodeURIComponent(String(Qt.resolvedUrl("fetch.sh")).replace(/^file:\/\//, ""))
 
   property var settings: ({})
   signal servicesDiscovered(var services)
@@ -83,7 +87,7 @@ Item {
     if (services.length === 0) return
     lastAttemptMs = Date.now()
     loading = true
-    var argv = ["bash", "-c", fetchScript, "mib-statuscheck"]
+    var argv = ["bash", "-c", fetchScript, "mib-statuscheck", fetchPath]
     for (var i = 0; i < services.length; i++) argv.push(Model.endpointFor(services[i].url))
     fetchProcess.command = argv
     fetchProcess.running = true
@@ -103,9 +107,8 @@ Item {
     probing = true
     _probeBody = ""
     probeProcess.command = [
-      "curl", "-fsSL", "--max-time", "15",
-      "-H", "Accept: application/json",
-      "--", Model.endpointFor(page)
+      "bash", fetchPath, "15", Model.endpointFor(page),
+      "-L", "-H", "Accept: application/json"
     ]
     probeProcess.running = true
     return true
@@ -118,13 +121,15 @@ Item {
     if (page !== "") Quickshell.execDetached(["xdg-open", page])
   }
 
-  // -f so an HTTP error is a non-zero exit rather than an error page we would
-  // try to parse. Each feed's exit code rides in its own END line, so one
-  // unreachable service cannot spoil the rest of the batch.
+  // fetch.sh fails on an HTTP error rather than printing an error page we
+  // would try to parse, and prints nothing for an oversized body. Each feed's
+  // exit code rides in its own END line, so one unreachable service cannot
+  // spoil the rest of the batch. $1 is fetch.sh; the rest are the feeds.
   readonly property string fetchScript:
+    'fetch=$1; shift;' +
     'for url in "$@"; do' +
     '  printf "===FEED %s===\\n" "$url";' +
-    '  curl -fsS --max-time 20 -H "Accept: application/json" -- "$url" 2>/dev/null;' +
+    '  bash "$fetch" 20 "$url" -H "Accept: application/json";' +
     '  printf "\\n===END %s===\\n" "$?";' +
     'done'
 
@@ -272,10 +277,11 @@ Item {
       var body = String(probeOut.text || root._probeBody || "")
       root._probeBody = ""
       root.probeUrl = ""
-      // curl -f exits 22 for an HTTP error status: the server answered, there
-      // is just no feed at that path. Every other failure is the network.
+      // 22 is an HTTP error status and 63 an oversized body: either way the
+      // server answered, there is just no usable feed at that path. Every
+      // other failure is the network.
       if (exitCode !== 0) {
-        root.probeFinished(url, false, exitCode === 22, "")
+        root.probeFinished(url, false, exitCode === 22 || exitCode === 63, "")
         return
       }
       try {

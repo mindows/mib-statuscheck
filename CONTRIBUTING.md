@@ -52,6 +52,7 @@ checks, `node`.
 | `Service.qml` | the batched poll, change detection, notifications, URL probing |
 | `Panel.qml` | bar button, status popup, settings view, IPC target |
 | `Model.js` | presets, URL handling, feed parsing, labels, aggregation, severity |
+| `fetch.sh` | every network request: curl with a deadline and a 1 MiB ceiling on the answer |
 | `StatusPalette.qml` | the theme's green/amber/red, re-read on a theme switch |
 | `docs/design.md` | why things behave the way they do; read it before changing behavior |
 | `docs/feeds.md` | verified payload details for each provider format |

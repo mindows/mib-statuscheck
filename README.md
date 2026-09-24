@@ -151,8 +151,12 @@ it lists them and removes nothing.
   `/api/v2/summary.json`. It also makes one request when you add a URL, to
   verify it. The requests carry no identifiers or cookies, but, like any web
   request, they show your IP address to each status page's host.
+- **Response size:** at most 1 MiB is read from any page. A larger answer is
+  dropped unread, so a broken or hostile page can't make the shell buffer an
+  unbounded response.
 - **Stored locally:** your settings, in the widget's entry in
-  `~/.config/omarchy/shell.json`. Nothing else is written to disk.
+  `~/.config/omarchy/shell.json`. Nothing else is kept on disk: each response
+  passes through a temporary file that is deleted as soon as it is read.
 - **Never:** no telemetry, no analytics, no accounts, and nothing is sent to
   the author.
 - **System access:** desktop notifications (which you can turn off in
