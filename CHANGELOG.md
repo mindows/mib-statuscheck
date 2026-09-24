@@ -5,6 +5,14 @@ Notable changes to MIB Status Check. Versions follow `version` in
 
 ## Unreleased
 
+## 1.0.1 — 2026-09-24
+
+- Fix: a watched status page could forge the batch's delimiter lines in its
+  own response and report a false status, and send false notifications, for
+  another watched service. Every delimiter now carries a random tag drawn
+  fresh for each check, and anything without it is read as response text.
+  Found in the marketplace security review.
+
 ## 1.0.0 — 2026-09-23
 
 The first public release.

@@ -125,12 +125,21 @@ Item {
   // would try to parse, and prints nothing for an oversized body. Each feed's
   // exit code rides in its own END line, so one unreachable service cannot
   // spoil the rest of the batch. $1 is fetch.sh; the rest are the feeds.
+  //
+  // Every delimiter carries a random tag drawn fresh for each batch and
+  // announced on the first line, before any feed is fetched. The bodies are
+  // remote text sharing one stream, so without it a hostile page could print
+  // its own delimiters and a forged summary for another watched service; it
+  // cannot print a tag it never sees.
   readonly property string fetchScript:
     'fetch=$1; shift;' +
+    'tag=$(od -An -N16 -tx1 /dev/urandom | tr -d " \\n");' +
+    '[[ $tag =~ ^[0-9a-f]{32}$ ]] || exit 1;' +
+    'printf "===BATCH %s===\\n" "$tag";' +
     'for url in "$@"; do' +
-    '  printf "===FEED %s===\\n" "$url";' +
+    '  printf "===FEED %s %s===\\n" "$tag" "$url";' +
     '  bash "$fetch" 20 "$url" -H "Accept: application/json";' +
-    '  printf "\\n===END %s===\\n" "$?";' +
+    '  printf "\\n===END %s %s===\\n" "$tag" "$?";' +
     'done'
 
   function apply(batch) {

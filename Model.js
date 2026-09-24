@@ -447,28 +447,41 @@ function parseSummary(text) {
   }
 }
 
-// The batch fetcher emits, per service:
-//   ===FEED <url>===
+// The batch fetcher emits a random 32-hex-digit tag, then, per service:
+//   ===BATCH <tag>===                  (once, first)
+//   ===FEED <tag> <url>===
 //   <body or nothing>
-//   ===END <exitCode>===
-// One malformed or unreachable feed therefore cannot spoil the others, and a
-// body containing our delimiters is only ever read as body text because the
-// delimiter lines are matched whole.
+//   ===END <tag> <exitCode>===
+// One malformed or unreachable feed therefore cannot spoil the others. The
+// bodies are remote text in the same stream, so a delimiter only counts when
+// it carries this batch's tag: a page can print "===FEED ...===" lines of its
+// own, but not the tag, which is drawn fresh for every batch and never sent
+// anywhere. Anything untagged is body text. A batch with no valid tag line
+// yields nothing, so every row keeps its last reading. Each URL is also taken
+// once, first entry wins.
 function parseBatch(text) {
   var lines = String(text || "").split("\n")
   var out = {}
+  var head = lines[0].match(/^===BATCH ([0-9a-f]{32})===$/)
+  if (!head) return out
+  var feedPrefix = "===FEED " + head[1] + " "
+  var endPattern = new RegExp("^===END " + head[1] + " (-?\\d+)===$")
   var url = null
   var body = []
-  for (var i = 0; i < lines.length; i++) {
+  for (var i = 1; i < lines.length; i++) {
     var line = lines[i]
-    var start = line.match(/^===FEED (.+)===$/)
-    if (start) {
-      url = start[1]
+    if (url === null && line.indexOf(feedPrefix) === 0 && /===$/.test(line)) {
+      url = line.slice(feedPrefix.length, -3)
       body = []
       continue
     }
-    var end = line.match(/^===END (-?\d+)===$/)
-    if (end && url !== null) {
+    var end = url !== null ? line.match(endPattern) : null
+    if (end) {
+      if (out[url] !== undefined) {
+        url = null
+        body = []
+        continue
+      }
       var exitCode = Number(end[1])
       if (exitCode === 63) {
         // fetch.sh's ceiling: the page answered, but with far more than any

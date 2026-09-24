@@ -80,7 +80,10 @@ subsequent changes notify.
 **One request per tick, not one per service.** A single `curl` loop walks every
 endpoint and emits a delimited stream, so ten feeds cost one process instead of
 ten racing ones, and the whole readings set updates at once. URLs go in as
-`"$@"` argv, so a hand-edited config can never become a command.
+`"$@"` argv, so a hand-edited config can never become a command. The feeds
+share that one stream, so every delimiter carries a random tag drawn fresh for
+each check: a page can print delimiter lines of its own, but not the tag, so it
+cannot pass off a forged summary as another service's.
 
 **Every response has a size ceiling.** The URLs are whatever the user pasted,
 so `fetch.sh` wraps each request, the batch and the probe alike: it keeps the
