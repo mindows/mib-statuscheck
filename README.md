@@ -2,19 +2,20 @@
 
 ![MIB Status Check popup: five watched services, with OpenAI reporting a minor issue](preview.png)
 
-Why bother getting notifs about services going down? How often does something
-like GitHub actually go down? More often than you'd think, and usually right
-when a push hangs or Claude stops answering and you're left wondering whether
-it's you or them. This answers that in a glance.
-
 An [Omarchy](https://omarchy.org/) bar widget that watches the status pages of
 the services you depend on (GitHub, Claude, Cloudflare and many more). The bar
 shows the worst status across all of them, you get one quiet notification per
 change, and a click opens a popup that shows what is broken.
 
+When a push hangs or Claude stops answering, a glance at the bar tells you
+whether the provider has already reported a problem, before you start
+debugging your own setup. It only knows what the status page says, and
+providers often post a few minutes into an outage, so a green check means
+"nothing reported yet", not "the problem is on your end".
+
 ## What it does
 
-- Watches up to **10 status pages** on one timer, in one batched request.
+- Watches up to **10 status pages** on one timer, in one batched check.
 - The bar icon shows the **worst** status across everything you watch: a check
   when all is well, a warning glyph when it isn't.
 - Sends one desktop notification **per service** whenever its status changes:
@@ -100,7 +101,7 @@ Managed in the popup's settings view and stored on the widget's entry in
 
 ```json
 {
-  "id": "mib-statuscheck",
+  "id": "io.github.mindows.mib-statuscheck",
   "refreshIntervalSec": 300,
   "notify": true,
   "hideWhenOperational": false,
@@ -128,16 +129,16 @@ The widget registers an IPC target, so a dotfiles bootstrap can set it up
 without editing `shell.json`:
 
 ```bash
-omarchy-shell mib-statuscheck state            # one line per service
-omarchy-shell mib-statuscheck presets          # every preset name
-omarchy-shell mib-statuscheck addPreset GitHub # add by preset name
-omarchy-shell mib-statuscheck add status.figma.com  # add by URL (verified first)
-omarchy-shell mib-statuscheck remove GitHub    # by name or URL fragment
-omarchy-shell mib-statuscheck interval 900     # seconds
-omarchy-shell mib-statuscheck refresh          # check now
-omarchy-shell mib-statuscheck toggle           # open/close the popup
-omarchy-shell mib-statuscheck openSettings     # open on the settings view
-omarchy-shell mib-statuscheck expand Cloudflare # open with one detail unfolded
+omarchy-shell io.github.mindows.mib-statuscheck state                 # one line per service
+omarchy-shell io.github.mindows.mib-statuscheck presets               # every preset name
+omarchy-shell io.github.mindows.mib-statuscheck addPreset GitHub      # add by preset name
+omarchy-shell io.github.mindows.mib-statuscheck add status.figma.com  # add by URL (verified first)
+omarchy-shell io.github.mindows.mib-statuscheck remove GitHub         # by name or URL fragment
+omarchy-shell io.github.mindows.mib-statuscheck interval 900          # seconds
+omarchy-shell io.github.mindows.mib-statuscheck refresh               # check now
+omarchy-shell io.github.mindows.mib-statuscheck toggle                # open/close the popup
+omarchy-shell io.github.mindows.mib-statuscheck openSettings          # open on the settings view
+omarchy-shell io.github.mindows.mib-statuscheck expand Cloudflare     # open with one detail unfolded
 ```
 
 `expand` is handy for a keybinding that shows what's wrong with one service.
@@ -165,20 +166,20 @@ it lists them and removes nothing.
 ## Update
 
 ```bash
-omarchy plugin update mib-statuscheck
+omarchy plugin update io.github.mindows.mib-statuscheck
 ```
 
 ## Remove
 
 ```bash
-omarchy plugin remove mib-statuscheck
+omarchy plugin remove io.github.mindows.mib-statuscheck
 ```
 
 This removes the widget from the bar and deletes the plugin folder. Its
 settings, including your service list, are stored on the bar entry, so they
 are removed with it and nothing is left behind. Disabling the plugin
 (`omarchy plugin disable`) also drops the bar entry. To keep your list, save
-the output of `omarchy-shell mib-statuscheck state` first.
+the output of `omarchy-shell io.github.mindows.mib-statuscheck state` first.
 
 ## Troubleshooting
 

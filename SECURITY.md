@@ -10,7 +10,7 @@ Please report privately through
 not in a public issue.
 
 Include what you found, how to reproduce it, and the commit you tested
-(`git -C ~/.config/omarchy/plugins/mib-statuscheck rev-parse --short HEAD`).
+(`git -C ~/.config/omarchy/plugins/io.github.mindows.mib-statuscheck rev-parse --short HEAD`).
 
 Examples of what counts:
 

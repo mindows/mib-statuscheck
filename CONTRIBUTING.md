@@ -26,15 +26,15 @@ checks, `node`.
    first, because the dev link goes in the same place:
 
    ```bash
-   omarchy plugin remove mib-statuscheck --yes
+   omarchy plugin remove io.github.mindows.mib-statuscheck --yes
    ```
 
 3. Link your clone in and enable it:
 
    ```bash
-   ln -s ~/dev/mib-statuscheck ~/.config/omarchy/plugins/mib-statuscheck
+   ln -s ~/dev/mib-statuscheck ~/.config/omarchy/plugins/io.github.mindows.mib-statuscheck
    omarchy-shell shell rescanPlugins
-   omarchy plugin enable mib-statuscheck
+   omarchy plugin enable io.github.mindows.mib-statuscheck
    ```
 
 4. After every edit, restart the shell. Its file watcher does not follow
@@ -111,7 +111,8 @@ the preset table in `README.md` and paste the command's output into your PR.
 - Write commit subjects in the imperative, as in the existing history
   ("Sort the preset list by name").
 - Update the README if you change anything a user sees: settings, keys,
-  IPC commands or presets.
+  IPC commands or presets, and add a line under *Unreleased* in
+  `CHANGELOG.md`.
 - Don't bump the version in `manifest.json`. That happens at release time.
 - PRs are squash-merged, so the PR title becomes the commit subject.
 

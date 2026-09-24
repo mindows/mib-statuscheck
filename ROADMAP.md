@@ -186,20 +186,19 @@ is a project.
 
 8. **Get publish-ready, then publish.** (S)
    Follow the author's Omarchy publishing playbook (kept outside this
-   repo). Still to do:
-   - `CHANGELOG.md`
-   - **a version footer in settings**: "MIB Status Check 1.1.0 · MIT ·
-     Source ↗", read from `manifest.json`, because bar widgets aren't given
-     their manifest
-   - a listing description that leads with the differentiators above
-   - a clean install test from GitHub, a tagged release, then the
-     marketplace submission
+   repo). Still to do: a clean install test from GitHub, then the
+   marketplace submission.
 
    Done: the public repo at `github.com/mindows/mib-statuscheck`; the root
    `LICENSE` (MIT, © 2026 mindows); `preview.png`; a README with install via
    `omarchy plugin add`, **Network and privacy**, **Remove** and
    troubleshooting sections; `CONTRIBUTING.md`, `SECURITY.md`, and issue and
-   PR templates. The ID `mib-statuscheck` is kept, and it is free (checked
+   PR templates; `CHANGELOG.md`; a version footer in settings ("MIB Status
+   Check 1.0.0 · MIT · Source ↗"), read from `manifest.json` because bar
+   widgets aren't given their manifest; a listing description that leads
+   with the differentiators above; the `v1.0.0` tag. The ID is
+   `io.github.mindows.mib-statuscheck`, namespaced as the marketplace
+   recommends, since IDs are permanent once listed; it is free (checked
    against the registry and retired IDs).
 
 ### v1.2: Components and noise control

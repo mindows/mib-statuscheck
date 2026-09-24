@@ -14,8 +14,8 @@ import "Model.js" as Model
 // check interval.
 Panel {
   id: root
-  moduleName: "mib-statuscheck"
-  ipcTarget: "mib-statuscheck"
+  moduleName: "io.github.mindows.mib-statuscheck"
+  ipcTarget: "io.github.mindows.mib-statuscheck"
   manageIpc: false
 
   // Which service row is expanded, by url. Only one at a time: with ten
@@ -229,6 +229,19 @@ Panel {
   // Not named `palette`: every Item already has an inherited `palette`
   // property (QQuickPalette), and it shadows an id of that name.
   StatusPalette { id: statusColors }
+
+  // Bar widgets aren't handed their manifest, so the settings footer reads
+  // the version out of it directly.
+  readonly property string sourceUrl: "https://github.com/mindows/mib-statuscheck"
+  property var manifest: null
+
+  FileView {
+    path: decodeURIComponent(String(Qt.resolvedUrl("manifest.json")).replace(/^file:\/\//, ""))
+    printErrors: false
+    onLoaded: {
+      try { root.manifest = JSON.parse(text()) } catch (e) { root.manifest = null }
+    }
+  }
 
   Service {
     id: monitor
@@ -650,6 +663,29 @@ Panel {
               foreground: root.foreground
               fontFamily: root.fontFamily
               onClicked: root.persistSettings({ hideWhenOperational: !root.hideWhenOperational })
+            }
+
+            Text {
+              textFormat: Text.PlainText
+              width: parent.width
+              text: [
+                root.manifest && root.manifest.name ? root.manifest.name : "MIB Status Check",
+                root.manifest && root.manifest.version ? root.manifest.version : ""
+              ].join(" ").trim()
+                + (root.manifest && root.manifest.license ? " · " + root.manifest.license : "")
+                + " · Source \u2197"
+              color: sourceArea.containsMouse ? root.foreground : root.dim
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              elide: Text.ElideRight
+
+              MouseArea {
+                id: sourceArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Quickshell.execDetached(["xdg-open", root.sourceUrl])
+              }
             }
           }
 

@@ -20,8 +20,8 @@ body:
     attributes:
       label: Plugin version and commit
       description: >-
-        Run `jq -r .version ~/.config/omarchy/plugins/mib-statuscheck/manifest.json`
-        and `git -C ~/.config/omarchy/plugins/mib-statuscheck rev-parse --short HEAD`.
+        Run `jq -r .version ~/.config/omarchy/plugins/io.github.mindows.mib-statuscheck/manifest.json`
+        and `git -C ~/.config/omarchy/plugins/io.github.mindows.mib-statuscheck rev-parse --short HEAD`.
       placeholder: 1.0.0 @ c9fadaa
     validations:
       required: true
@@ -37,4 +37,4 @@ body:
     id: extra
     attributes:
       label: Anything else
-      description: Screenshots, the output of `omarchy-shell mib-statuscheck state`, or your settings entry from `~/.config/omarchy/shell.json`.
+      description: Screenshots, the output of `omarchy-shell io.github.mindows.mib-statuscheck state`, or your settings entry from `~/.config/omarchy/shell.json`.
