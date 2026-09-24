@@ -108,7 +108,8 @@ Item {
     _probeBody = ""
     probeProcess.command = [
       "bash", fetchPath, "15", Model.endpointFor(page),
-      "-L", "-H", "Accept: application/json"
+      "-L", "--max-redirs", "3", "--proto-redir", "=https",
+      "-H", "Accept: application/json"
     ]
     probeProcess.running = true
     return true
@@ -126,6 +127,10 @@ Item {
   // exit code rides in its own END line, so one unreachable service cannot
   // spoil the rest of the batch. $1 is fetch.sh; the rest are the feeds.
   //
+  // Redirects are followed, as the add-time probe does, but only to https and
+  // for at most three hops: status pages do move (Zoom and Bitbucket both
+  // have), and a service saved under the old address should keep working.
+  //
   // Every delimiter carries a random tag drawn fresh for each batch and
   // announced on the first line, before any feed is fetched. The bodies are
   // remote text sharing one stream, so without it a hostile page could print
@@ -138,7 +143,7 @@ Item {
     'printf "===BATCH %s===\\n" "$tag";' +
     'for url in "$@"; do' +
     '  printf "===FEED %s %s===\\n" "$tag" "$url";' +
-    '  bash "$fetch" 20 "$url" -H "Accept: application/json";' +
+    '  bash "$fetch" 20 "$url" -L --max-redirs 3 --proto-redir =https -H "Accept: application/json";' +
     '  printf "\\n===END %s %s===\\n" "$tag" "$?";' +
     'done'
 

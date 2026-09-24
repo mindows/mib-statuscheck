@@ -23,7 +23,7 @@ var PRESETS = [
   { name: "1Password",    url: "https://status.1password.com" },
   { name: "Airtable",     url: "https://status.airtable.com" },
   { name: "Atlassian",    url: "https://status.atlassian.com" },
-  { name: "Bitbucket",    url: "https://status.bitbucket.org" },
+  { name: "Bitbucket",    url: "https://bitbucket.status.atlassian.com" },
   { name: "CircleCI",     url: "https://status.circleci.com" },
   { name: "Claude",       url: "https://status.claude.com" },
   { name: "Cloudflare",   url: "https://www.cloudflarestatus.com" },
@@ -58,7 +58,7 @@ var PRESETS = [
   { name: "Vercel",       url: "https://www.vercel-status.com" },
   { name: "Wikipedia",    url: "https://www.wikimediastatus.net" },
   { name: "Zapier",       url: "https://status.zapier.com" },
-  { name: "Zoom",         url: "https://status.zoom.us" }
+  { name: "Zoom",         url: "https://www.zoomstatus.com" }
 ]
 
 // Ten feeds is already a busy popup, and it is 10 sequential curls per tick.
