@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # Fetch one URL, with a hard ceiling on how much of the answer is read.
 #
-#   fetch.sh <max-seconds> <url> [curl options...]
+#   FETCH_URL=<url> fetch.sh <max-seconds> [curl options...]
+#
+# The URL comes in through the environment and reaches curl through a config
+# file descriptor, never as an argument: any local user can read every
+# process's command line (/proc/<pid>/cmdline), but only we can read its
+# environment or file descriptors, and which status pages someone watches is
+# theirs to keep. Nothing on this script's or curl's command line is private.
 #
 # Prints the response body, or nothing and exits non-zero when the request
 # fails, runs past <max-seconds>, or the body is larger than MAX_BYTES. A
@@ -26,13 +32,19 @@ set -uo pipefail
 MAX_BYTES=1048576
 
 seconds=$1
-url=$2
-shift 2
+shift
+url=${FETCH_URL-}
+# normalizePageUrl only ever produces printable URLs; refuse anything else
+# rather than let it reach curl's config syntax.
+[[ -n $url && $url != *[[:cntrl:]]* ]] || exit 2
+url=${url//\\/\\\\}
+url=${url//\"/\\\"}
 
 body=$(mktemp) || exit 1
 trap 'rm -f "$body"' EXIT
 
-curl -fsS --max-time "$seconds" --max-filesize "$MAX_BYTES" "$@" -- "$url" 2>/dev/null |
+curl -fsS --max-time "$seconds" --max-filesize "$MAX_BYTES" "$@" \
+  --config <(printf 'url = "%s"\n' "$url") 2>/dev/null </dev/null |
   head -c $((MAX_BYTES + 1)) >"$body"
 status=("${PIPESTATUS[@]}")
 

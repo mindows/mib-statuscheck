@@ -83,7 +83,16 @@ ten racing ones, and the whole readings set updates at once. URLs go in as
 `"$@"` argv, so a hand-edited config can never become a command. The feeds
 share that one stream, so every delimiter carries a random tag drawn fresh for
 each check: a page can print delimiter lines of its own, but not the tag, so it
-cannot pass off a forged summary as another service's.
+cannot pass off a forged summary as another service's. The URLs themselves
+travel in the environment (`MIB_FEEDS`, then `FETCH_URL`) and reach `curl`
+through `--config` on a file descriptor, because any local user can read a
+process's command line, but not its environment.
+
+**Remote text is data, never markup.** Every `Text` is `PlainText`, and
+strings from a feed are cleaned of control and invisible formatting
+characters and length-capped (`Model.cleanText`). The one place that does
+read markup is Omarchy's toast body, which is `StyledText`, so the
+notification body is escaped (`Model.escapeMarkup`).
 
 **Every response has a size ceiling.** The URLs are whatever the user pasted,
 so `fetch.sh` wraps each request, the batch and the probe alike: it keeps the
