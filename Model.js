@@ -23,7 +23,7 @@ var PRESETS = [
   { name: "1Password",    url: "https://status.1password.com" },
   { name: "Airtable",     url: "https://status.airtable.com" },
   { name: "Atlassian",    url: "https://status.atlassian.com" },
-  { name: "Bitbucket",    url: "https://status.bitbucket.org" },
+  { name: "Bitbucket",    url: "https://bitbucket.status.atlassian.com" },
   { name: "CircleCI",     url: "https://status.circleci.com" },
   { name: "Claude",       url: "https://status.claude.com" },
   { name: "Cloudflare",   url: "https://www.cloudflarestatus.com" },
@@ -58,7 +58,7 @@ var PRESETS = [
   { name: "Vercel",       url: "https://www.vercel-status.com" },
   { name: "Wikipedia",    url: "https://www.wikimediastatus.net" },
   { name: "Zapier",       url: "https://status.zapier.com" },
-  { name: "Zoom",         url: "https://status.zoom.us" }
+  { name: "Zoom",         url: "https://www.zoomstatus.com" }
 ]
 
 // Ten feeds is already a busy popup, and it is 10 sequential curls per tick.
@@ -191,7 +191,7 @@ function normalizeServices(raw) {
     var url = normalizePageUrl(entry && typeof entry === "object" ? entry.url : entry)
     if (url === "" || seen[url]) continue
     seen[url] = true
-    var name = String((entry && entry.name) || "").trim()
+    var name = cleanText(entry && entry.name)
     if (name === "") {
       var preset = presetFor(url)
       name = preset ? preset.name : nameFromUrl(url)
@@ -313,6 +313,36 @@ function relativeFuture(iso, nowMs) {
   return "in " + Math.floor(hours / 24) + "d"
 }
 
+// Every string a feed hands us is remote text: an incident title, a
+// component, the page's own name (which ends up saved in shell.json as the
+// service's label). Control characters and invisible formatting characters
+// (bidi overrides, zero-width joiners, soft hyphens) are replaced with spaces,
+// so a page can't reorder or hide what a row says, whitespace collapses, and
+// the result is capped. Saved names go through this again when they are read
+// back, for anything stored before it existed.
+var NAME_LIMIT = 120
+var BODY_LIMIT = 2000
+var HIDDEN_CHARS = /[\u0000-\u001F\u007F-\u009F\u00AD\u061C\u115F\u1160\u180E\u200B-\u200F\u2028-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF0-\uFFFB]/g
+
+function cleanText(raw, limit) {
+  var text = String(raw === undefined || raw === null ? "" : raw)
+    .replace(HIDDEN_CHARS, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+  var max = limit || NAME_LIMIT
+  return text.length > max ? text.slice(0, max).trim() : text
+}
+
+// For text shown by something that reads markup: Omarchy renders a toast's
+// body as StyledText, so remote text must arrive as literal characters.
+function escapeMarkup(raw) {
+  return String(raw || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
 // A popup row has one line for this, so trim at a word boundary rather than
 // letting the label elide mid-word.
 function truncate(raw, limit) {
@@ -348,21 +378,21 @@ function normalizeIncident(raw, kind) {
   var affected = []
   var components = Array.isArray(raw.components) ? raw.components : []
   for (var i = 0; i < components.length; i++) {
-    var name = String(components[i].name || "").trim()
+    var name = cleanText(components[i].name)
     if (name !== "") affected.push(name)
   }
   return {
     kind: kind || "incident",
     id: String(raw.id || ""),
-    name: String(raw.name || "Unnamed incident"),
-    status: String(raw.status || ""),
-    impact: String(raw.impact || ""),
+    name: cleanText(raw.name) || "Unnamed incident",
+    status: cleanText(raw.status),
+    impact: cleanText(raw.impact),
     url: String(raw.shortlink || ""),
     startedAt: String(raw.started_at || raw.scheduled_for || raw.created_at || ""),
     updatedAt: String(raw.updated_at || ""),
     scheduledUntil: String(raw.scheduled_until || ""),
     updateId: update ? String(update.id || "") : "",
-    updateBody: update ? String(update.body || "").trim() : "",
+    updateBody: update ? cleanText(update.body, BODY_LIMIT) : "",
     updateAt: update ? String(update.display_at || update.created_at || "") : "",
     affected: affected
   }
@@ -430,16 +460,16 @@ function parseSummary(text) {
     if (component.group === true) continue
     if (String(component.status || "operational") === "operational") continue
     degraded.push({
-      name: String(component.name || ""),
-      status: String(component.status || ""),
-      label: componentStatusLabel(component.status)
+      name: cleanText(component.name),
+      status: cleanText(component.status),
+      label: componentStatusLabel(cleanText(component.status))
     })
   }
 
   return {
     indicator: indicator,
-    description: String(status.description || indicatorLabel(indicator)),
-    pageName: String((json.page || {}).name || ""),
+    description: cleanText(status.description) || indicatorLabel(indicator),
+    pageName: cleanText((json.page || {}).name),
     incident: headline,
     incidentCount: ongoing.length,
     maintenanceCount: maintenances.length,

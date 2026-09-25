@@ -10,8 +10,10 @@ import "Model.js" as Model
 // All feeds are fetched by a single `curl` loop rather than one Process each:
 // ten QML processes racing to finish is a lot of moving parts for a background
 // poll, and one delimited stream means the whole readings set updates at once.
-// The URLs go in as `"$@"` argv, so a hand-edited config can never become a
-// command. Every request, the batch and the add-time probe alike, goes
+// The URLs go in through the environment, never argv or the script text:
+// a hand-edited config can never become a command, and since any local user
+// can read every process's command line, which pages someone watches never
+// shows up there. Every request, the batch and the add-time probe alike, goes
 // through fetch.sh, which caps how much of an answer is read.
 Item {
   id: root
@@ -87,9 +89,10 @@ Item {
     if (services.length === 0) return
     lastAttemptMs = Date.now()
     loading = true
-    var argv = ["bash", "-c", fetchScript, "mib-statuscheck", fetchPath]
-    for (var i = 0; i < services.length; i++) argv.push(Model.endpointFor(services[i].url))
-    fetchProcess.command = argv
+    var feeds = []
+    for (var i = 0; i < services.length; i++) feeds.push(Model.endpointFor(services[i].url))
+    fetchProcess.environment = ({ MIB_FEEDS: feeds.join("\n") })
+    fetchProcess.command = ["bash", "-c", fetchScript, "mib-statuscheck", fetchPath]
     fetchProcess.running = true
   }
 
@@ -106,9 +109,11 @@ Item {
     probeUrl = page
     probing = true
     _probeBody = ""
+    probeProcess.environment = ({ FETCH_URL: Model.endpointFor(page) })
     probeProcess.command = [
-      "bash", fetchPath, "15", Model.endpointFor(page),
-      "-L", "-H", "Accept: application/json"
+      "bash", fetchPath, "15",
+      "-L", "--max-redirs", "3", "--proto-redir", "=https",
+      "-H", "Accept: application/json"
     ]
     probeProcess.running = true
     return true
@@ -124,7 +129,13 @@ Item {
   // fetch.sh fails on an HTTP error rather than printing an error page we
   // would try to parse, and prints nothing for an oversized body. Each feed's
   // exit code rides in its own END line, so one unreachable service cannot
-  // spoil the rest of the batch. $1 is fetch.sh; the rest are the feeds.
+  // spoil the rest of the batch. $1 is fetch.sh; the feeds arrive one per
+  // line in $MIB_FEEDS and each reaches fetch.sh as $FETCH_URL, so no URL is
+  // ever an argument (printf is a builtin, not a process).
+  //
+  // Redirects are followed, as the add-time probe does, but only to https and
+  // for at most three hops: status pages do move (Zoom and Bitbucket both
+  // have), and a service saved under the old address should keep working.
   //
   // Every delimiter carries a random tag drawn fresh for each batch and
   // announced on the first line, before any feed is fetched. The bodies are
@@ -132,15 +143,16 @@ Item {
   // its own delimiters and a forged summary for another watched service; it
   // cannot print a tag it never sees.
   readonly property string fetchScript:
-    'fetch=$1; shift;' +
+    'fetch=$1;' +
     'tag=$(od -An -N16 -tx1 /dev/urandom | tr -d " \\n");' +
     '[[ $tag =~ ^[0-9a-f]{32}$ ]] || exit 1;' +
     'printf "===BATCH %s===\\n" "$tag";' +
-    'for url in "$@"; do' +
+    'while IFS= read -r url; do' +
+    '  [[ -n $url ]] || continue;' +
     '  printf "===FEED %s %s===\\n" "$tag" "$url";' +
-    '  bash "$fetch" 20 "$url" -H "Accept: application/json";' +
+    '  FETCH_URL=$url bash "$fetch" 20 -L --max-redirs 3 --proto-redir =https -H "Accept: application/json" </dev/null;' +
     '  printf "\\n===END %s %s===\\n" "$tag" "$?";' +
-    'done'
+    'done <<<"${MIB_FEEDS-}"'
 
   function apply(batch) {
     var nextReadings = ({})
@@ -222,7 +234,9 @@ Item {
 
   // argv, not a shell string: an incident title or update body is arbitrary
   // remote text, and the notification sender takes each value as one typed
-  // D-Bus parameter, so nothing in it can become a flag or a command.
+  // D-Bus parameter, so nothing in it can become a flag or a command. The
+  // body is markup-escaped, because Omarchy renders it as StyledText: a
+  // status page must not be able to add links or formatting to our toast.
   //
   // Deliberately no `--exec`: Omarchy runs a toast's click action and then
   // dismisses it, so attaching one turns the ordinary click-to-dismiss gesture
@@ -236,7 +250,7 @@ Item {
       "-t", String(Model.notificationTimeoutMs(reading.indicator)),
       "--app-name", "mib-statuscheck",
       Model.notificationHeadline(serviceName, reading),
-      Model.notificationBody(reading)
+      Model.escapeMarkup(Model.notificationBody(reading))
     ])
     drainNotifyQueue()
   }

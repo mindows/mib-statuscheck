@@ -5,6 +5,20 @@ Notable changes to MIB Status Check. Versions follow `version` in
 
 ## Unreleased
 
+- Fix: the Zoom and Bitbucket presets always showed *Unreachable*, because
+  both status pages have moved. The presets point at the new pages, and the
+  regular check now follows redirects (https only, at most three hops), so a
+  service saved under an old address recovers on its own (#1).
+- The addresses you watch no longer appear in any process's command line,
+  which other local users can read. They reach `curl` through the
+  environment and a config file descriptor.
+- A status page can no longer add links or formatting to a notification:
+  the toast body is markup-escaped, since Omarchy renders it as styled text.
+- Text from a feed (incident titles, components, the page's own name) is
+  cleaned of control and invisible formatting characters, such as bidi
+  overrides and zero-width characters, and capped in length. That includes
+  names already saved in `shell.json`.
+
 ## 1.0.1 — 2026-09-24
 
 - Fix: a watched status page could forge the batch's delimiter lines in its
