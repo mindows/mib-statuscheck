@@ -5,6 +5,8 @@ Notable changes to MIB Status Check. Versions follow `version` in
 
 ## Unreleased
 
+## 1.0.2 — 2026-09-26
+
 - Fix: the Zoom and Bitbucket presets always showed *Unreachable*, because
   both status pages have moved. The presets point at the new pages, and a
   service saved under an old address is read as the new one, so it recovers
