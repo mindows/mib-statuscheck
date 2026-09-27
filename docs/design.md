@@ -92,7 +92,9 @@ process's command line, but not its environment.
 **Redirects are never followed.** A watched page could otherwise point the
 periodic request at any host, including ones on the local network, and a
 page that only redirects would pass the add-time check and then fail every
-poll. When a preset's page moves, `Model.MOVED_PAGES` maps its old host to
+poll. `fetch.sh` passes `-L --max-redirs 0`, so a redirect exits 47 without
+contacting its target, and the row says *Status page has moved*. Every URL
+is normalized to https. When a preset's page moves, `Model.MOVED_PAGES` maps its old host to
 the new address, so saved services keep working, keep their preset name, and
 can't be added twice.
 

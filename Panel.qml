@@ -249,15 +249,18 @@ Panel {
     // The provider knows what it is called; adopt the name so a pasted URL
     // ends up labelled "GitHub" rather than "Githubstatus".
     onServicesDiscovered: function(services) { root.saveServices(services) }
-    onProbeFinished: function(url, ok, reachable, name) {
-      if (ok) {
+    onProbeFinished: function(url, failure, name) {
+      if (failure === "") {
         if (root.addService(name, url)) urlField.text = ""
         return
       }
-      root.addError = reachable
-        ? "No status feed there. Only Atlassian Statuspage pages work "
+      if (failure === "moved")
+        root.addError = "That page redirects somewhere else. Paste the address it moved to."
+      else if (failure === "unreachable")
+        root.addError = "Couldn't reach that page. Check the address and your connection."
+      else
+        root.addError = "No status feed there. Only Atlassian Statuspage pages work "
           + "— Google, X, Slack and AWS publish their own formats."
-        : "Couldn't reach that page. Check the address and your connection."
     }
   }
 

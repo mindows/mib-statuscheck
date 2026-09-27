@@ -65,7 +65,14 @@ var PRESETS = [
 // old address is read as the new one wherever a URL is normalized, so it keeps
 // its preset name, can't be added a second time, and is fetched directly.
 // Nothing follows redirects: a page could otherwise point our periodic
-// request at any host, including ones on the local network.
+// request at any host, including ones on the local network. A page that
+// moves without an entry here shows "Status page has moved" (fetch.sh turns
+// a redirect into exit 47), so the user can paste its new address.
+//
+// A hand-kept list on purpose, and the old hosts stay in it for good: the
+// saved config is only rewritten when the user changes something (writing
+// shell.json on load could clobber a list the host hasn't handed us yet), so
+// a service saved under an old address may keep it indefinitely.
 var MOVED_PAGES = {
   "status.bitbucket.org": "https://bitbucket.status.atlassian.com",
   "status.zoom.us": "https://www.zoomstatus.com"
@@ -138,8 +145,11 @@ function normalizePageUrl(raw) {
   if (!/^https?:\/\//i.test(text)) text = "https://" + text
   // Scheme and host are case-insensitive; the path is not. Lowercasing here
   // is what lets "Status.Claude.com" dedupe against, and match, the preset.
-  text = text.replace(/^(https?:\/\/)([^\/]*)/i, function(all, scheme, host) {
-    return scheme.toLowerCase() + host.toLowerCase()
+  // Always https: every Statuspage serves it, http only answers with a
+  // redirect we don't follow, and it keeps the feed from being tampered with
+  // on the way.
+  text = text.replace(/^https?:\/\/([^\/]*)/i, function(all, host) {
+    return "https://" + host.toLowerCase()
   })
   text = text.replace(/\/+$/, "")
   // Paste the feed and we'll take the page it belongs to.
@@ -202,7 +212,7 @@ function normalizeServices(raw) {
     var url = normalizePageUrl(entry && typeof entry === "object" ? entry.url : entry)
     if (url === "" || seen[url]) continue
     seen[url] = true
-    var name = cleanText(entry && entry.name)
+    var name = entry && typeof entry.name === "string" ? cleanText(entry.name) : ""
     if (name === "") {
       var preset = presetFor(url)
       name = preset ? preset.name : nameFromUrl(url)
@@ -326,19 +336,26 @@ function relativeFuture(iso, nowMs) {
 
 // Every string a feed hands us is remote text: an incident title, a
 // component, the page's own name (which ends up saved in shell.json as the
-// service's label). Control characters and invisible formatting characters
-// (bidi overrides, zero-width joiners, soft hyphens) are replaced with spaces,
-// so a page can't reorder or hide what a row says, whitespace collapses, and
-// the result is capped. Saved names go through this again when they are read
-// back, for anything stored before it existed.
+// service's label). Invisible formatting characters are deleted, so a page
+// can't reorder, hide or smuggle text in what a row says. Control characters
+// and line separators become spaces, whitespace collapses, and the result is
+// capped with an ellipsis. Saved names go through this again when they are
+// read back, for anything stored before it existed.
 var NAME_LIMIT = 120
+var TITLE_LIMIT = 300
 var BODY_LIMIT = 2000
-// Written as explicit ranges, with astral characters as surrogate pairs,
-// because the shell's JS engine can't be relied on for \p{} classes. The last
-// two alternatives are the invisible tag characters and variation selectors
-// (U+E0000-E007F, U+E0100-E01EF) and the musical-notation format characters
-// (U+1D173-1D17A).
-var HIDDEN_CHARS = /[\u0000-\u001F\u007F-\u009F\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180E\u200B-\u200F\u2028-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF0-\uFFFB]|\uDB40[\uDC00-\uDC7F\uDD00-\uDDEF]|\uD834[\uDD73-\uDD7A]/g
+
+// Deleted rather than spaced, because several (the soft hyphen, ZWJ/ZWNJ,
+// variation selectors) sit inside ordinary words and emoji. Explicit ranges,
+// because the shell's JS engine has no \p{Cf} (checked: SyntaxError), though
+// it does take \u{...} with the u flag. Covers the bidi controls, zero-width
+// characters, Hangul and Mongolian fillers and selectors, interlinear
+// annotation marks, Kaithi, Egyptian and shorthand format controls, musical
+// format characters, tag characters and variation selectors.
+var INVISIBLE_CHARS = /[\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF9-\uFFFB\u{110BD}\u{110CD}\u{13430}-\u{1343F}\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}-\u{E007F}\u{E0100}-\u{E01EF}]/gu
+
+// These separate words, so they become spaces.
+var BREAKING_CHARS = /[\u0000-\u001F\u007F-\u009F\u2028\u2029]/g
 
 // Cut to at most `limit` UTF-16 units without splitting an astral character
 // (most emoji) in half, which would render as a replacement glyph.
@@ -348,11 +365,12 @@ function sliceText(text, limit) {
 
 function cleanText(raw, limit) {
   var text = String(raw === undefined || raw === null ? "" : raw)
-    .replace(HIDDEN_CHARS, " ")
+    .replace(INVISIBLE_CHARS, "")
+    .replace(BREAKING_CHARS, " ")
     .replace(/\s+/g, " ")
     .trim()
   var max = limit || NAME_LIMIT
-  return text.length > max ? sliceText(text, max).trim() : text
+  return text.length > max ? sliceText(text, max - 1).trim() + "\u2026" : text
 }
 
 // For text shown by something that reads markup: Omarchy renders a toast's
@@ -406,7 +424,7 @@ function normalizeIncident(raw, kind) {
   return {
     kind: kind || "incident",
     id: String(raw.id || ""),
-    name: cleanText(raw.name) || "Unnamed incident",
+    name: cleanText(raw.name, TITLE_LIMIT) || "Unnamed incident",
     status: cleanText(raw.status),
     impact: cleanText(raw.impact),
     url: String(raw.shortlink || ""),
@@ -491,7 +509,7 @@ function parseSummary(text) {
 
   return {
     indicator: indicator,
-    description: cleanText(status.description) || indicatorLabel(indicator),
+    description: cleanText(status.description, TITLE_LIMIT) || indicatorLabel(indicator),
     pageName: cleanText((json.page || {}).name),
     incident: headline,
     incidentCount: ongoing.length,
@@ -536,7 +554,10 @@ function parseBatch(text) {
         continue
       }
       var exitCode = Number(end[1])
-      if (exitCode === 63) {
+      if (exitCode === 47) {
+        // fetch.sh never follows a redirect; the page moved somewhere.
+        out[url] = { error: "Status page has moved" }
+      } else if (exitCode === 63) {
         // fetch.sh's ceiling: the page answered, but with far more than any
         // status feed needs, so it was dropped unread.
         out[url] = { error: "Status feed too large" }
