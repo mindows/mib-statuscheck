@@ -23,10 +23,11 @@ Item {
 
   property var settings: ({})
   signal servicesDiscovered(var services)
-  // ok=false with reachable=true means the page answered but published no
-  // readable Statuspage feed; reachable=false means we never got an answer
-  // (offline, DNS, timeout), which says nothing about the page itself.
-  signal probeFinished(string url, bool ok, bool reachable, string name)
+  // failure is "" when the page has a feed; "nofeed" when it answered
+  // without a readable Statuspage feed; "moved" when it redirected somewhere;
+  // "unreachable" when we never got an answer (offline, DNS, timeout), which
+  // says nothing about the page itself.
+  signal probeFinished(string url, string failure, string name)
 
   readonly property var services: Model.normalizeServices(
     settings && settings.services !== undefined ? settings.services : Model.DEFAULT_SERVICES)
@@ -213,7 +214,7 @@ Item {
     for (var i = 0; i < services.length; i++) {
       var service = services[i]
       var reading = currentReadings[service.url]
-      var discovered = reading && !reading.error ? String(reading.pageName || "").trim() : ""
+      var discovered = reading && !reading.error ? reading.pageName || "" : ""
       var preset = Model.presetFor(service.url)
       // A preset's name is ours to keep: "Claude" reads better than the page's
       // own "Claude" / "Anthropic Status" drift, and the user picked the label.
@@ -296,19 +297,22 @@ Item {
       var body = String(probeOut.text || root._probeBody || "")
       root._probeBody = ""
       root.probeUrl = ""
-      // 22 is an HTTP error status and 63 an oversized body: either way the
-      // server answered, there is just no usable feed at that path. Every
-      // other failure is the network.
+      // 47 is a redirect (fetch.sh never follows one). 22 is an HTTP error
+      // status and 63 an oversized body: either way the server answered,
+      // there is just no usable feed at that path. Every other failure is the
+      // network.
       if (exitCode !== 0) {
-        root.probeFinished(url, false, exitCode === 22 || exitCode === 63, "")
+        var failure = exitCode === 47 ? "moved"
+          : (exitCode === 22 || exitCode === 63) ? "nofeed" : "unreachable"
+        root.probeFinished(url, failure, "")
         return
       }
       try {
         var reading = Model.parseSummary(body)
-        if (reading.error) root.probeFinished(url, false, true, "")
-        else root.probeFinished(url, true, true, String(reading.pageName || ""))
+        if (reading.error) root.probeFinished(url, "nofeed", "")
+        else root.probeFinished(url, "", reading.pageName || "")
       } catch (e) {
-        root.probeFinished(url, false, true, "")
+        root.probeFinished(url, "nofeed", "")
       }
     }
   }

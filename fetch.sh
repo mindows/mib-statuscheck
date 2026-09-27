@@ -13,7 +13,8 @@
 # fails, runs past <max-seconds>, or the body is larger than MAX_BYTES. A
 # failed request exits with curl's own code, so a caller can still tell an
 # HTTP error (22) from a network failure; an oversized body exits 63, which is
-# what curl itself uses for a download over --max-filesize.
+# what curl itself uses for a download over --max-filesize; a redirect exits
+# 47 without contacting its target.
 #
 # Every status feed the widget parses comes through here, and the URLs are
 # whatever the user pasted, so a broken or hostile page must not make the
@@ -45,7 +46,11 @@ trap 'rm -f "$body"' EXIT
 
 # -q must come first: it stops curl reading the user's ~/.curlrc, where a
 # line like `include` would put headers in front of the JSON.
-curl -q -fsS --max-time "$seconds" --max-filesize "$MAX_BYTES" "$@" \
+#
+# Redirects are never followed (a page could aim us at any host, including
+# the local network), but -L with --max-redirs 0 turns one into exit 47
+# instead of a 3xx that -f treats as success, so callers can say "moved".
+curl -q -fsS -L --max-redirs 0 --max-time "$seconds" --max-filesize "$MAX_BYTES" "$@" \
   --config <(printf 'url = "%s"\n' "$url") 2>/dev/null </dev/null |
   head -c $((MAX_BYTES + 1)) >"$body"
 status=("${PIPESTATUS[@]}")

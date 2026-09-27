@@ -9,19 +9,22 @@ Notable changes to MIB Status Check. Versions follow `version` in
   both status pages have moved. The presets point at the new pages, and a
   service saved under an old address is read as the new one, so it recovers
   on its own and keeps its name (#1).
-- The add-time check no longer follows redirects, matching the regular
-  check: a page that only redirected used to pass the check and then fail
-  every poll. Redirects are never followed, so a page can't point the
-  widget's requests at another host.
+- Redirects are never followed, so a page can't point the widget's
+  requests at another host. A page that has moved now says *Status page has
+  moved*, and adding one says so too, instead of passing the add-time check
+  and then failing every poll.
+- Pages are always fetched over https: a pasted or saved `http://` address
+  is read as `https://`, so it works and matches its preset.
 - The addresses you watch no longer appear in any process's command line,
   which other local users can read. They reach `curl` through the
   environment and a config file descriptor.
 - A status page can no longer add links or formatting to a notification:
   the toast body is markup-escaped, since Omarchy renders it as styled text.
 - Text from a feed (incident titles, components, the page's own name) is
-  cleaned of control and invisible formatting characters, such as bidi
-  overrides and zero-width characters, and capped in length. That includes
-  names already saved in `shell.json`.
+  cleaned: invisible formatting characters such as bidi overrides,
+  zero-width characters and tag characters are removed, control characters
+  become spaces, and long text is cut with an ellipsis. That includes names
+  already saved in `shell.json`.
 - A `~/.curlrc` no longer changes how feeds are fetched. A line such as
   `include` there used to put headers in front of every feed, so all of them
   read as unreachable.
