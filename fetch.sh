@@ -43,7 +43,9 @@ url=${url//\"/\\\"}
 body=$(mktemp) || exit 1
 trap 'rm -f "$body"' EXIT
 
-curl -fsS --max-time "$seconds" --max-filesize "$MAX_BYTES" "$@" \
+# -q must come first: it stops curl reading the user's ~/.curlrc, where a
+# line like `include` would put headers in front of the JSON.
+curl -q -fsS --max-time "$seconds" --max-filesize "$MAX_BYTES" "$@" \
   --config <(printf 'url = "%s"\n' "$url") 2>/dev/null </dev/null |
   head -c $((MAX_BYTES + 1)) >"$body"
 status=("${PIPESTATUS[@]}")

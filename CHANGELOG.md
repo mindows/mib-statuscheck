@@ -18,6 +18,9 @@ Notable changes to MIB Status Check. Versions follow `version` in
   cleaned of control and invisible formatting characters, such as bidi
   overrides and zero-width characters, and capped in length. That includes
   names already saved in `shell.json`.
+- A `~/.curlrc` no longer changes how feeds are fetched. A line such as
+  `include` there used to put headers in front of every feed, so all of them
+  read as unreachable.
 
 ## 1.0.1 — 2026-09-24
 

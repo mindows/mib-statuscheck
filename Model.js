@@ -324,13 +324,19 @@ var NAME_LIMIT = 120
 var BODY_LIMIT = 2000
 var HIDDEN_CHARS = /[\u0000-\u001F\u007F-\u009F\u00AD\u061C\u115F\u1160\u180E\u200B-\u200F\u2028-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF0-\uFFFB]/g
 
+// Cut to at most `limit` UTF-16 units without splitting an astral character
+// (most emoji) in half, which would render as a replacement glyph.
+function sliceText(text, limit) {
+  return text.slice(0, limit).replace(/[\uD800-\uDBFF]$/, "")
+}
+
 function cleanText(raw, limit) {
   var text = String(raw === undefined || raw === null ? "" : raw)
     .replace(HIDDEN_CHARS, " ")
     .replace(/\s+/g, " ")
     .trim()
   var max = limit || NAME_LIMIT
-  return text.length > max ? text.slice(0, max).trim() : text
+  return text.length > max ? sliceText(text, max).trim() : text
 }
 
 // For text shown by something that reads markup: Omarchy renders a toast's
@@ -348,7 +354,7 @@ function escapeMarkup(raw) {
 function truncate(raw, limit) {
   var text = String(raw || "").replace(/\s+/g, " ").trim()
   if (text.length <= limit) return text
-  var cut = text.slice(0, limit)
+  var cut = sliceText(text, limit)
   var space = cut.lastIndexOf(" ")
   if (space > limit * 0.6) cut = cut.slice(0, space)
   return cut.replace(/[.,;:\-]$/, "") + "…"
