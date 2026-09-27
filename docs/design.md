@@ -79,14 +79,22 @@ subsequent changes notify.
 
 **One request per tick, not one per service.** A single `curl` loop walks every
 endpoint and emits a delimited stream, so ten feeds cost one process instead of
-ten racing ones, and the whole readings set updates at once. URLs go in as
-`"$@"` argv, so a hand-edited config can never become a command. The feeds
+ten racing ones, and the whole readings set updates at once. No URL is ever
+part of a shell string or a command line (see below), so a hand-edited config
+can never become a command. The feeds
 share that one stream, so every delimiter carries a random tag drawn fresh for
 each check: a page can print delimiter lines of its own, but not the tag, so it
 cannot pass off a forged summary as another service's. The URLs themselves
 travel in the environment (`MIB_FEEDS`, then `FETCH_URL`) and reach `curl`
 through `--config` on a file descriptor, because any local user can read a
 process's command line, but not its environment.
+
+**Redirects are never followed.** A watched page could otherwise point the
+periodic request at any host, including ones on the local network, and a
+page that only redirects would pass the add-time check and then fail every
+poll. When a preset's page moves, `Model.MOVED_PAGES` maps its old host to
+the new address, so saved services keep working, keep their preset name, and
+can't be added twice.
 
 **Remote text is data, never markup.** Every `Text` is `PlainText`, and
 strings from a feed are cleaned of control and invisible formatting
