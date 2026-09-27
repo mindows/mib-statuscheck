@@ -61,6 +61,16 @@ var PRESETS = [
   { name: "Zoom",         url: "https://www.zoomstatus.com" }
 ]
 
+// Presets whose status page has moved, by old host. A service saved under the
+// old address is read as the new one wherever a URL is normalized, so it keeps
+// its preset name, can't be added a second time, and is fetched directly.
+// Nothing follows redirects: a page could otherwise point our periodic
+// request at any host, including ones on the local network.
+var MOVED_PAGES = {
+  "status.bitbucket.org": "https://bitbucket.status.atlassian.com",
+  "status.zoom.us": "https://www.zoomstatus.com"
+}
+
 // Ten feeds is already a busy popup, and it is 10 sequential curls per tick.
 var MAX_SERVICES = 10
 
@@ -143,12 +153,13 @@ function normalizePageUrl(raw) {
   // credentials, or a port we'd rather not guess at.
   if (host.indexOf(".") === -1) return ""
   if (!/^[A-Za-z0-9.\-]+$/.test(host)) return ""
-  // The URL only ever reaches curl as one argv element, never a shell string,
-  // so this is not what stops injection — it is what makes a bad paste fail
-  // loudly at the point of entry instead of becoming a feed that can only
-  // ever error.
+  // The URL never reaches a shell: it travels in the environment and reaches
+  // curl through its config file (fetch.sh). So this is not what stops
+  // injection; it is what makes a bad paste fail loudly at the point of entry
+  // instead of becoming a feed that can only ever error.
   var path = match[2] || ""
   if (path !== "" && !/^[A-Za-z0-9._~\-\/%]+$/.test(path)) return ""
+  if (path === "" && MOVED_PAGES[host]) return MOVED_PAGES[host]
   return text
 }
 
@@ -322,7 +333,12 @@ function relativeFuture(iso, nowMs) {
 // back, for anything stored before it existed.
 var NAME_LIMIT = 120
 var BODY_LIMIT = 2000
-var HIDDEN_CHARS = /[\u0000-\u001F\u007F-\u009F\u00AD\u061C\u115F\u1160\u180E\u200B-\u200F\u2028-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF0-\uFFFB]/g
+// Written as explicit ranges, with astral characters as surrogate pairs,
+// because the shell's JS engine can't be relied on for \p{} classes. The last
+// two alternatives are the invisible tag characters and variation selectors
+// (U+E0000-E007F, U+E0100-E01EF) and the musical-notation format characters
+// (U+1D173-1D17A).
+var HIDDEN_CHARS = /[\u0000-\u001F\u007F-\u009F\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180E\u200B-\u200F\u2028-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF0-\uFFFB]|\uDB40[\uDC00-\uDC7F\uDD00-\uDDEF]|\uD834[\uDD73-\uDD7A]/g
 
 // Cut to at most `limit` UTF-16 units without splitting an astral character
 // (most emoji) in half, which would render as a replacement glyph.
@@ -464,11 +480,12 @@ function parseSummary(text) {
   for (var c = 0; c < components.length; c++) {
     var component = components[c]
     if (component.group === true) continue
-    if (String(component.status || "operational") === "operational") continue
+    var componentStatus = cleanText(component.status) || "operational"
+    if (componentStatus === "operational") continue
     degraded.push({
       name: cleanText(component.name),
-      status: cleanText(component.status),
-      label: componentStatusLabel(cleanText(component.status))
+      status: componentStatus,
+      label: componentStatusLabel(componentStatus)
     })
   }
 

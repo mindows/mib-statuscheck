@@ -150,9 +150,8 @@ it lists them and removes nothing.
 - **Hosts contacted:** only the status pages you add. On each check (every 5
   minutes by default), the widget sends one `GET` to each page's
   `/api/v2/summary.json`. It also makes one request when you add a URL, to
-  verify it. If a page has moved, the request follows its redirect, over
-  https only and for at most three hops, so the host it moved to is contacted
-  too. The requests carry no identifiers or cookies, but, like any web
+  verify it. Redirects are never followed. The requests carry no identifiers
+  or cookies, but, like any web
   request, they show your IP address to each status page's host.
 - **On this machine:** the addresses you watch never appear in a process's
   command line, which any local user can read. They reach `curl` through its

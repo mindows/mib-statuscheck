@@ -6,9 +6,13 @@ Notable changes to MIB Status Check. Versions follow `version` in
 ## Unreleased
 
 - Fix: the Zoom and Bitbucket presets always showed *Unreachable*, because
-  both status pages have moved. The presets point at the new pages, and the
-  regular check now follows redirects (https only, at most three hops), so a
-  service saved under an old address recovers on its own (#1).
+  both status pages have moved. The presets point at the new pages, and a
+  service saved under an old address is read as the new one, so it recovers
+  on its own and keeps its name (#1).
+- The add-time check no longer follows redirects, matching the regular
+  check: a page that only redirected used to pass the check and then fail
+  every poll. Redirects are never followed, so a page can't point the
+  widget's requests at another host.
 - The addresses you watch no longer appear in any process's command line,
   which other local users can read. They reach `curl` through the
   environment and a config file descriptor.

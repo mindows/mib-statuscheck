@@ -110,11 +110,11 @@ Item {
     probing = true
     _probeBody = ""
     probeProcess.environment = ({ FETCH_URL: Model.endpointFor(page) })
-    probeProcess.command = [
-      "bash", fetchPath, "15",
-      "-L", "--max-redirs", "3", "--proto-redir", "=https",
-      "-H", "Accept: application/json"
-    ]
+    // No -L, same as the regular check: a page that only redirects would
+    // pass here and then fail every poll, and following redirects would let a
+    // page aim our requests at any host. Moved presets are remapped instead
+    // (Model.MOVED_PAGES).
+    probeProcess.command = ["bash", fetchPath, "15", "-H", "Accept: application/json"]
     probeProcess.running = true
     return true
   }
@@ -133,10 +133,6 @@ Item {
   // line in $MIB_FEEDS and each reaches fetch.sh as $FETCH_URL, so no URL is
   // ever an argument (printf is a builtin, not a process).
   //
-  // Redirects are followed, as the add-time probe does, but only to https and
-  // for at most three hops: status pages do move (Zoom and Bitbucket both
-  // have), and a service saved under the old address should keep working.
-  //
   // Every delimiter carries a random tag drawn fresh for each batch and
   // announced on the first line, before any feed is fetched. The bodies are
   // remote text sharing one stream, so without it a hostile page could print
@@ -150,7 +146,7 @@ Item {
     'while IFS= read -r url; do' +
     '  [[ -n $url ]] || continue;' +
     '  printf "===FEED %s %s===\\n" "$tag" "$url";' +
-    '  FETCH_URL=$url bash "$fetch" 20 -L --max-redirs 3 --proto-redir =https -H "Accept: application/json" </dev/null;' +
+    '  FETCH_URL=$url bash "$fetch" 20 -H "Accept: application/json" </dev/null;' +
     '  printf "\\n===END %s %s===\\n" "$tag" "$?";' +
     'done <<<"${MIB_FEEDS-}"'
 
